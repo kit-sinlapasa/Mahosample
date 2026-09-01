@@ -1,4 +1,5 @@
 import hashlib
+from collections.abc import Iterable
 from datetime import datetime
 
 from fastapi import HTTPException, status
@@ -132,6 +133,52 @@ def list_sample_requests(
         ),
     )
     return total, items
+
+
+def list_ready_to_ship_requests(db: Session) -> list[SampleRequest]:
+    return list(
+        db.scalars(
+            select(SampleRequest)
+            .where(SampleRequest.shipping_status == ShippingStatus.READY_TO_SHIP.value)
+            .order_by(SampleRequest.created_at.asc(), SampleRequest.id.asc()),
+        ),
+    )
+
+
+POST_OFFICE_EXPORT_FIELDS = [
+    "request_no",
+    "recipient_name",
+    "phone",
+    "address_line1",
+    "address_line2",
+    "subdistrict",
+    "district",
+    "province",
+    "postal_code",
+    "shipping_status",
+]
+
+
+def build_post_office_export_rows(
+    sample_requests: Iterable[SampleRequest],
+) -> list[dict[str, str]]:
+    rows = []
+    for sample_request in sample_requests:
+        rows.append(
+            {
+                "request_no": sample_request.request_no,
+                "recipient_name": sample_request.recipient_name,
+                "phone": sample_request.phone,
+                "address_line1": sample_request.address_line1,
+                "address_line2": sample_request.address_line2 or "",
+                "subdistrict": sample_request.subdistrict,
+                "district": sample_request.district,
+                "province": sample_request.province,
+                "postal_code": sample_request.postal_code,
+                "shipping_status": sample_request.shipping_status,
+            },
+        )
+    return rows
 
 
 def update_sample_request(
