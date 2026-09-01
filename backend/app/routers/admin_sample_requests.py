@@ -1,6 +1,8 @@
+import csv
+from io import StringIO
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -40,6 +42,30 @@ def read_sample_requests(
     return SampleRequestListResponse(
         total=total,
         items=[to_admin_read(item) for item in items],
+    )
+
+
+@router.get("/export/post-office")
+def export_post_office_csv(
+    db: Annotated[Session, Depends(get_db)],
+    _: Annotated[User, Depends(require_staff_user)],
+) -> Response:
+    sample_requests = sample_request_service.list_ready_to_ship_requests(db)
+    output = StringIO()
+    writer = csv.DictWriter(
+        output,
+        fieldnames=sample_request_service.POST_OFFICE_EXPORT_FIELDS,
+        lineterminator="\n",
+    )
+    writer.writeheader()
+    writer.writerows(sample_request_service.build_post_office_export_rows(sample_requests))
+
+    return Response(
+        content=f"\ufeff{output.getvalue()}",
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": 'attachment; filename="mahosample-post-office-export.csv"',
+        },
     )
 
 
