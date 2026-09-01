@@ -29,6 +29,7 @@ python -m venv venv
 venv\\Scripts\\activate
 pip install -r requirements.txt
 python -m alembic upgrade head
+python scripts/seed.py
 uvicorn app.main:app --reload
 ```
 
@@ -42,9 +43,14 @@ npm run dev
 
 ## Demo Accounts
 
-Demo accounts will be added during the authentication step.
-
 บัญชีทดลอง เปิดเผยโดยเจตนา ไม่มีข้อมูลจริง
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Admin | admin.demo@example.com | admin-password |
+| Staff | staff.demo@example.com | staff-password |
+
+Run the backend seed script after migrations to create these accounts locally.
 
 ## Project Structure
 
@@ -61,4 +67,3 @@ docs/      Project documentation
 - Commit with `feat:`, `fix:`, `docs:`, `test:`, or `chore:`.
 - Open a pull request with a verification section.
 - Merge with squash after CI passes.
-
