@@ -68,3 +68,54 @@ class SampleRequestTrackingRead(BaseModel):
     tracking_number: str | None
     tracking_url: str | None
 
+
+class SampleRequestAdminRead(BaseModel):
+    id: int
+    request_no: str
+    full_name: str
+    phone: str
+    email: EmailStr | None
+    line_id: str | None
+    messenger_id: str | None
+    age_range: AgeRange
+    health_interest: HealthInterest
+    health_interest_other: str | None
+    maho_experience: MahoExperience
+    recipient_name: str
+    address_line1: str
+    address_line2: str | None
+    subdistrict: str
+    district: str
+    province: str
+    postal_code: str
+    preferred_contact_channel: PreferredContactChannel
+    pdpa_consent: bool
+    marketing_consent: bool
+    request_status: RequestStatus
+    shipping_status: ShippingStatus
+    tracking_number: str | None
+    tracking_url: str | None
+    shipped_at: datetime | None
+    notes: str | None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SampleRequestListResponse(BaseModel):
+    total: int
+    items: list[SampleRequestAdminRead]
+
+
+class SampleRequestUpdate(BaseModel):
+    request_status: RequestStatus | None = None
+    notes: str | None = Field(default=None, max_length=5000)
+
+
+class SampleRequestShippingUpdate(BaseModel):
+    request_status: RequestStatus | None = None
+    shipping_status: ShippingStatus
+    tracking_number: str | None = Field(default=None, max_length=50)
+    shipped_at: datetime | None = None
+
