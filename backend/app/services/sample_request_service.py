@@ -118,6 +118,11 @@ def get_sample_request_by_request_no(db: Session, request_no: str) -> SampleRequ
     return db.scalar(select(SampleRequest).where(SampleRequest.request_no == request_no))
 
 
+def delete_sample_request(db: Session, sample_request: SampleRequest) -> None:
+    db.delete(sample_request)
+    db.commit()
+
+
 def list_sample_requests(
     db: Session,
     offset: int = 0,
@@ -179,6 +184,21 @@ def build_post_office_export_rows(
             },
         )
     return rows
+
+
+def get_dashboard_summary(db: Session) -> dict[str, object]:
+    total_requests = db.scalar(select(func.count()).select_from(SampleRequest)) or 0
+    request_status_rows = db.execute(
+        select(SampleRequest.request_status, func.count()).group_by(SampleRequest.request_status),
+    )
+    shipping_status_rows = db.execute(
+        select(SampleRequest.shipping_status, func.count()).group_by(SampleRequest.shipping_status),
+    )
+    return {
+        "total_requests": total_requests,
+        "by_request_status": {status: count for status, count in request_status_rows},
+        "by_shipping_status": {status: count for status, count in shipping_status_rows},
+    }
 
 
 def update_sample_request(

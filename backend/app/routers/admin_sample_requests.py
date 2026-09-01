@@ -6,12 +6,13 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, Up
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.deps import require_staff_user
+from app.deps import require_admin_user, require_staff_user
 from app.models.sample_request import SampleRequest
 from app.models.user import User
 from app.schemas.import_job import ImportJobRead
 from app.schemas.sample_request import (
     SampleRequestAdminRead,
+    SampleRequestCreate,
     SampleRequestListResponse,
     SampleRequestShippingUpdate,
     SampleRequestUpdate,
@@ -45,6 +46,21 @@ def read_sample_requests(
         total=total,
         items=[to_admin_read(item) for item in items],
     )
+
+
+@router.post("", response_model=SampleRequestAdminRead, status_code=status.HTTP_201_CREATED)
+def create_sample_request(
+    sample_request_in: SampleRequestCreate,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_staff_user)],
+) -> SampleRequestAdminRead:
+    sample_request = sample_request_service.create_public_sample_request(db, sample_request_in)
+    sample_request.created_by_user_id = current_user.id
+    sample_request.updated_by_user_id = current_user.id
+    db.add(sample_request)
+    db.commit()
+    db.refresh(sample_request)
+    return to_admin_read(sample_request)
 
 
 @router.get("/export/post-office")
@@ -99,6 +115,22 @@ def read_sample_request(
             detail="Sample request not found.",
         )
     return to_admin_read(sample_request)
+
+
+@router.delete("/{request_no}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_sample_request(
+    request_no: str,
+    db: Annotated[Session, Depends(get_db)],
+    _: Annotated[User, Depends(require_admin_user)],
+) -> Response:
+    sample_request = sample_request_service.get_sample_request_by_request_no(db, request_no)
+    if sample_request is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Sample request not found.",
+        )
+    sample_request_service.delete_sample_request(db, sample_request)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.patch("/{request_no}", response_model=SampleRequestAdminRead)
