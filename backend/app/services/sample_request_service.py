@@ -8,7 +8,12 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.models.sample_request import RequestStatus, SampleRequest, ShippingStatus
-from app.schemas.sample_request import SampleRequestCreate, SampleRequestTrackingRead
+from app.schemas.sample_request import (
+    SampleRequestCreate,
+    SampleRequestShippingUpdate,
+    SampleRequestTrackingRead,
+    SampleRequestUpdate,
+)
 
 
 def build_address_fingerprint(sample_request_in: SampleRequestCreate) -> str:
@@ -110,4 +115,57 @@ def create_public_sample_request(
 
 def get_sample_request_by_request_no(db: Session, request_no: str) -> SampleRequest | None:
     return db.scalar(select(SampleRequest).where(SampleRequest.request_no == request_no))
+
+
+def list_sample_requests(
+    db: Session,
+    offset: int = 0,
+    limit: int = 50,
+) -> tuple[int, list[SampleRequest]]:
+    total = db.scalar(select(func.count()).select_from(SampleRequest)) or 0
+    items = list(
+        db.scalars(
+            select(SampleRequest)
+            .order_by(SampleRequest.created_at.desc(), SampleRequest.id.desc())
+            .offset(offset)
+            .limit(limit),
+        ),
+    )
+    return total, items
+
+
+def update_sample_request(
+    db: Session,
+    sample_request: SampleRequest,
+    sample_request_in: SampleRequestUpdate,
+    updated_by_user_id: int,
+) -> SampleRequest:
+    update_data = sample_request_in.model_dump(exclude_unset=True)
+    if request_status := update_data.pop("request_status", None):
+        sample_request.request_status = request_status.value
+    for field, value in update_data.items():
+        setattr(sample_request, field, value)
+    sample_request.updated_by_user_id = updated_by_user_id
+    db.add(sample_request)
+    db.commit()
+    db.refresh(sample_request)
+    return sample_request
+
+
+def update_sample_request_shipping(
+    db: Session,
+    sample_request: SampleRequest,
+    shipping_in: SampleRequestShippingUpdate,
+    updated_by_user_id: int,
+) -> SampleRequest:
+    if shipping_in.request_status is not None:
+        sample_request.request_status = shipping_in.request_status.value
+    sample_request.shipping_status = shipping_in.shipping_status.value
+    sample_request.tracking_number = shipping_in.tracking_number
+    sample_request.shipped_at = shipping_in.shipped_at
+    sample_request.updated_by_user_id = updated_by_user_id
+    db.add(sample_request)
+    db.commit()
+    db.refresh(sample_request)
+    return sample_request
 
