@@ -2,13 +2,14 @@ import csv
 from io import StringIO
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.deps import require_staff_user
 from app.models.sample_request import SampleRequest
 from app.models.user import User
+from app.schemas.import_job import ImportJobRead
 from app.schemas.sample_request import (
     SampleRequestAdminRead,
     SampleRequestListResponse,
@@ -16,6 +17,7 @@ from app.schemas.sample_request import (
     SampleRequestUpdate,
 )
 from app.services import sample_request_service
+from app.services.tracking_import_service import import_tracking_csv
 
 router = APIRouter(prefix="/admin/sample-requests", tags=["admin-sample-requests"])
 
@@ -66,6 +68,21 @@ def export_post_office_csv(
         headers={
             "Content-Disposition": 'attachment; filename="mahosample-post-office-export.csv"',
         },
+    )
+
+
+@router.post("/import/tracking", response_model=ImportJobRead)
+async def import_tracking(
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_staff_user)],
+    file: Annotated[UploadFile, File()],
+) -> ImportJobRead:
+    content = await file.read()
+    return import_tracking_csv(
+        db,
+        filename=file.filename or "tracking.csv",
+        content=content,
+        created_by_user_id=current_user.id,
     )
 
 
