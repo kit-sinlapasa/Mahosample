@@ -12,6 +12,22 @@ const statusOptions = [
   "cancelled",
 ];
 const shippingOptions = ["not_ready", "ready_to_ship", "shipped", "delivered", "failed"];
+const requestStatusLabels = {
+  pending: "รอตรวจสอบ",
+  approved: "อนุมัติแล้ว",
+  rejected: "ไม่ผ่านเงื่อนไข",
+  packed: "แพ็กแล้ว",
+  shipped: "จัดส่งแล้ว",
+  completed: "เสร็จสิ้น",
+  cancelled: "ยกเลิก",
+};
+const shippingStatusLabels = {
+  not_ready: "ยังไม่พร้อมส่ง",
+  ready_to_ship: "พร้อมส่ง",
+  shipped: "จัดส่งแล้ว",
+  delivered: "นำจ่ายสำเร็จ",
+  failed: "จัดส่งไม่สำเร็จ",
+};
 
 function getDownloadFilename(response, fallback) {
   const disposition = response.headers["content-disposition"];
@@ -132,15 +148,20 @@ export default function StaffApp() {
       <main className="staff-shell">
         <form className="login-panel" onSubmit={login}>
           <p className="eyebrow">Mahosample Staff</p>
-          <h1 className="text-2xl font-bold">เข้าสู่ระบบพนักงาน</h1>
+          <h1 className="text-2xl">เข้าสู่ระบบพนักงาน</h1>
           <label className="field">
             <span>Email</span>
-            <input onChange={(event) => setEmail(event.target.value)} value={email} />
+            <input
+              autoComplete="username"
+              onChange={(event) => setEmail(event.target.value)}
+              value={email}
+            />
           </label>
           <label className="field">
             <span>Password</span>
             <input
               onChange={(event) => setPassword(event.target.value)}
+              autoComplete="current-password"
               type="password"
               value={password}
             />
@@ -155,12 +176,12 @@ export default function StaffApp() {
   }
 
   return (
-    <main className="min-h-screen bg-zinc-100 text-zinc-950">
+    <main className="staff-page min-h-screen bg-zinc-100 text-zinc-950">
       <header className="border-b border-zinc-200 bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
           <div>
             <p className="eyebrow">Mahosample Staff</p>
-            <h1 className="text-xl font-bold">Dashboard</h1>
+            <h1 className="text-xl">Dashboard</h1>
           </div>
           <button className="btn btn-secondary" onClick={logout} type="button">
             Logout
@@ -256,23 +277,25 @@ function StaffRow({ request, onSave, onShipping }) {
 
   return (
     <tr>
-      <td className="font-semibold">{request.request_no}</td>
+      <td>{request.request_no}</td>
       <td>{request.full_name}</td>
       <td>{request.phone}</td>
       <td>{request.province}</td>
       <td>
-        <select onChange={(event) => setRequestStatus(event.target.value)} value={requestStatus}>
-          {statusOptions.map((status) => (
-            <option key={status}>{status}</option>
-          ))}
-        </select>
+        <StatusSelect
+          labels={requestStatusLabels}
+          onChange={setRequestStatus}
+          options={statusOptions}
+          value={requestStatus}
+        />
       </td>
       <td>
-        <select onChange={(event) => setShippingStatus(event.target.value)} value={shippingStatus}>
-          {shippingOptions.map((status) => (
-            <option key={status}>{status}</option>
-          ))}
-        </select>
+        <StatusSelect
+          labels={shippingStatusLabels}
+          onChange={setShippingStatus}
+          options={shippingOptions}
+          value={shippingStatus}
+        />
       </td>
       <td>
         <input
@@ -290,17 +313,32 @@ function StaffRow({ request, onSave, onShipping }) {
             onClick={() => onSave(request.request_no, requestStatus, notes)}
             type="button"
           >
-            Save
+            บันทึกคำขอ
           </button>
           <button
             className="btn btn-primary"
             onClick={() => onShipping(request.request_no, shippingStatus, trackingNumber)}
             type="button"
           >
-            Ship
+            อัปเดตขนส่ง
           </button>
         </div>
       </td>
     </tr>
+  );
+}
+
+function StatusSelect({ labels, onChange, options, value }) {
+  return (
+    <div className="status-cell">
+      <span className="status-current">{labels[value] || value || "-"}</span>
+      <select onChange={(event) => onChange(event.target.value)} value={value}>
+        {options.map((status) => (
+          <option key={status} value={status}>
+            {labels[status] || status}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }
