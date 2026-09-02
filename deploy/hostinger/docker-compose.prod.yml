@@ -65,6 +65,12 @@ services:
       - mahosample-frontend
     ports:
       - "${MAHOSAMPLE_HTTP_PORT:-18080}:8080"
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.mahosample.entrypoints: websecure
+      traefik.http.routers.mahosample.rule: Host(`${MAHOSAMPLE_HOST}`)
+      traefik.http.routers.mahosample.tls.certresolver: letsencrypt
+      traefik.http.services.mahosample.loadbalancer.server.port: "8080"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - mahosample_prod_caddy_data:/data
