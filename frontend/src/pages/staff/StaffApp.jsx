@@ -132,7 +132,7 @@ export default function StaffApp() {
       <main className="staff-shell">
         <form className="login-panel" onSubmit={login}>
           <p className="eyebrow">Mahosample Staff</p>
-          <h1 className="text-2xl font-bold">เข้าสู่ระบบพนักงาน</h1>
+          <h1 className="text-2xl">เข้าสู่ระบบพนักงาน</h1>
           <label className="field">
             <span>Email</span>
             <input onChange={(event) => setEmail(event.target.value)} value={email} />
@@ -155,12 +155,12 @@ export default function StaffApp() {
   }
 
   return (
-    <main className="min-h-screen bg-zinc-100 text-zinc-950">
+    <main className="staff-page min-h-screen bg-zinc-100 text-zinc-950">
       <header className="border-b border-zinc-200 bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
           <div>
             <p className="eyebrow">Mahosample Staff</p>
-            <h1 className="text-xl font-bold">Dashboard</h1>
+            <h1 className="text-xl">Dashboard</h1>
           </div>
           <button className="btn btn-secondary" onClick={logout} type="button">
             Logout
@@ -256,7 +256,7 @@ function StaffRow({ request, onSave, onShipping }) {
 
   return (
     <tr>
-      <td className="font-semibold">{request.request_no}</td>
+      <td>{request.request_no}</td>
       <td>{request.full_name}</td>
       <td>{request.phone}</td>
       <td>{request.province}</td>
