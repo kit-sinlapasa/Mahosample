@@ -159,18 +159,47 @@ def list_ready_to_ship_requests(db: Session) -> list[SampleRequest]:
     )
 
 
+def list_requests_without_tracking(db: Session) -> list[SampleRequest]:
+    return list(
+        db.scalars(
+            select(SampleRequest)
+            .where(
+                (SampleRequest.tracking_number.is_(None))
+                | (SampleRequest.tracking_number == ""),
+            )
+            .order_by(SampleRequest.created_at.asc(), SampleRequest.id.asc()),
+        ),
+    )
+
+
+RECIPIENT_PHONE_FIELD = "*Recipient Phone\n(เบอร์โทรศัพท์ผู้รับ)"
+RECIPIENT_NAME_FIELD = "*Recipient Name\n(ชื่อผู้รับ)"
+RECIPIENT_CODE_FIELD = "RecipientCode\n(รหัสผู้รับ)"
+RECIPIENT_REGION_FIELD = (
+    "*Region（SubDistrict-District-Province-PostalCode）\n"
+    "(ภูมิภาค(ตำบล-อำเภอ-จังหวัด-ภูมิภาค))"
+)
+RECIPIENT_ADDRESS_FIELD = "*Address\n(ที่อยู่)"
+
 POST_OFFICE_EXPORT_FIELDS = [
-    "request_no",
-    "recipient_name",
-    "phone",
-    "address_line1",
-    "address_line2",
-    "subdistrict",
-    "district",
-    "province",
-    "postal_code",
-    "shipping_status",
+    RECIPIENT_PHONE_FIELD,
+    RECIPIENT_NAME_FIELD,
+    RECIPIENT_CODE_FIELD,
+    RECIPIENT_REGION_FIELD,
+    RECIPIENT_ADDRESS_FIELD,
 ]
+
+
+def build_full_shipping_address(sample_request: SampleRequest) -> str:
+    parts = [
+        sample_request.address_line1,
+        sample_request.address_line2,
+        sample_request.subdistrict,
+        sample_request.district,
+        sample_request.province,
+        sample_request.postal_code,
+    ]
+    return " ".join(part.strip() for part in parts if part and part.strip())
 
 
 def build_post_office_export_rows(
@@ -180,16 +209,11 @@ def build_post_office_export_rows(
     for sample_request in sample_requests:
         rows.append(
             {
-                "request_no": sample_request.request_no,
-                "recipient_name": sample_request.recipient_name,
-                "phone": sample_request.phone,
-                "address_line1": sample_request.address_line1,
-                "address_line2": sample_request.address_line2 or "",
-                "subdistrict": sample_request.subdistrict,
-                "district": sample_request.district,
-                "province": sample_request.province,
-                "postal_code": sample_request.postal_code,
-                "shipping_status": sample_request.shipping_status,
+                RECIPIENT_PHONE_FIELD: sample_request.phone,
+                RECIPIENT_NAME_FIELD: sample_request.recipient_name,
+                RECIPIENT_CODE_FIELD: sample_request.request_no,
+                RECIPIENT_REGION_FIELD: sample_request.postal_code,
+                RECIPIENT_ADDRESS_FIELD: build_full_shipping_address(sample_request),
             },
         )
     return rows
