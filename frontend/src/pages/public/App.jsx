@@ -83,9 +83,6 @@ export default function App() {
   const [submitting, setSubmitting] = useState(false);
   const [createdRequest, setCreatedRequest] = useState(null);
   const [formError, setFormError] = useState("");
-  const [trackingNo, setTrackingNo] = useState("");
-  const [tracking, setTracking] = useState(null);
-  const [trackingError, setTrackingError] = useState("");
 
   const canSubmit = useMemo(
     () => form.pdpa_consent && !submitting,
@@ -117,7 +114,6 @@ export default function App() {
       };
       const response = await apiClient.post("/api/public/sample-requests", payload);
       setCreatedRequest(response.data);
-      setTrackingNo(response.data.request_no);
       setForm(initialForm);
     } catch (error) {
       setFormError(
@@ -127,18 +123,6 @@ export default function App() {
       );
     } finally {
       setSubmitting(false);
-    }
-  }
-
-  async function checkTracking(event) {
-    event.preventDefault();
-    setTracking(null);
-    setTrackingError("");
-    try {
-      const response = await apiClient.get(`/api/public/tracking/${trackingNo.trim()}`);
-      setTracking(response.data);
-    } catch {
-      setTrackingError("ไม่พบเลขรายการนี้");
     }
   }
 
@@ -156,7 +140,7 @@ export default function App() {
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-6xl gap-6 px-4 py-6 lg:grid-cols-[1fr_340px]">
+      <div className="mx-auto grid max-w-6xl gap-6 px-4 py-6 lg:grid-cols-[1fr_320px]">
         <form className="surface space-y-6" onSubmit={submitForm}>
           <section>
             <h2>ข้อมูลผู้ลงทะเบียน</h2>
@@ -307,7 +291,11 @@ export default function App() {
 
           {formError && <p className="alert error">{formError}</p>}
           {createdRequest && (
-            <p className="alert success">ลงทะเบียนสำเร็จ เลขรายการ {createdRequest.request_no}</p>
+            <p className="alert success">
+              ลงทะเบียนสำเร็จ เลขรายการภายในคือ {createdRequest.request_no}
+              เจ้าหน้าที่จะส่งเลข tracking ให้ทาง LINE ID หรือ Facebook Messenger
+              หลังจัดส่งแล้ว
+            </p>
           )}
 
           <button className="btn btn-primary w-full sm:w-auto" disabled={!canSubmit} type="submit">
@@ -316,45 +304,21 @@ export default function App() {
         </form>
 
         <aside className="space-y-6">
-          <section className="surface">
-            <h2>ตรวจสอบสถานะ</h2>
-            <p className="mt-2 text-sm text-zinc-600">
-              ใช้เลขรายการที่ได้หลังส่งฟอร์ม เพื่อตรวจสถานะคำขอและเปิดลิงก์ Thailand Post
-              เมื่อมีเลข tracking แล้ว
-            </p>
-            <form className="mt-4 space-y-3" onSubmit={checkTracking}>
-              <label className="field">
-                <span>เลขรายการ</span>
-                <input
-                  onChange={(event) => setTrackingNo(event.target.value)}
-                  required
-                  value={trackingNo}
-                />
-              </label>
-              <button className="btn btn-primary w-full" type="submit">
-                เช็คสถานะ
-              </button>
-            </form>
-            {trackingError && <p className="alert error mt-4">{trackingError}</p>}
-            {tracking && (
-              <div className="mt-4 rounded-md border border-zinc-200 bg-zinc-50 p-4 text-sm">
-                <p className="font-semibold">{tracking.request_no}</p>
-                <p>สถานะคำขอ: {tracking.request_status}</p>
-                <p>สถานะขนส่ง: {tracking.shipping_status}</p>
-                {tracking.tracking_url && (
-                  <a className="link" href={tracking.tracking_url} rel="noreferrer" target="_blank">
-                    เปิด Thailand Post
-                  </a>
-                )}
-              </div>
-            )}
-          </section>
-
           <section className="surface text-sm leading-6 text-zinc-700">
             <h2>เงื่อนไขกิจกรรม</h2>
             <p className="mt-3">จำกัด 1 สิทธิ์ต่อ 1 คน เบอร์โทรศัพท์ และที่อยู่</p>
             <p>สำหรับผู้ที่ยังไม่เคยได้รับตัวอย่าง ตามเงื่อนไขของบริษัท</p>
             <p>ผลิตภัณฑ์เสริมอาหารไม่มีผลในการป้องกันหรือรักษาโรค</p>
+          </section>
+          <section className="surface text-sm leading-6 text-zinc-700">
+            <h2>ติดตามพัสดุ</h2>
+            <p className="mt-3">
+              หลังเจ้าหน้าที่จัดส่ง ระบบจะมีเลข tracking สำหรับส่งให้ลูกค้าทาง LINE ID
+              หรือ Facebook Messenger
+            </p>
+            <Link className="btn btn-primary mt-4 w-full" to="/tracking">
+              เปิดหน้าติดตามพัสดุ
+            </Link>
           </section>
         </aside>
       </div>

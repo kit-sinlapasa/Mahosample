@@ -75,3 +75,35 @@ def test_public_tracking_does_not_expose_personal_data(client: TestClient) -> No
     assert "phone" not in body
     assert "address_line1" not in body
     assert "email" not in body
+
+
+def test_public_tracking_can_be_read_by_tracking_number(client: TestClient, staff_user) -> None:
+    create_response = client.post(
+        "/api/public/sample-requests",
+        json=valid_sample_request_payload(),
+    )
+    assert create_response.status_code == 201
+    request_no = create_response.json()["request_no"]
+
+    from tests.conftest import login
+
+    token = login(client, staff_user.email, "staff-password")
+    shipping_response = client.patch(
+        f"/api/admin/sample-requests/{request_no}/shipping",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "request_status": "shipped",
+            "shipping_status": "shipped",
+            "tracking_number": "JC012366689TH",
+        },
+    )
+    assert shipping_response.status_code == 200
+
+    response = client.get("/api/public/tracking-number/JC012366689TH")
+
+    assert response.status_code == 200
+    assert response.json()["request_no"] == request_no
+    assert response.json()["tracking_url"] == (
+        "https://track.thailandpost.co.th/?trackNumber=JC012366689TH"
+    )
+    assert "phone" not in response.json()
