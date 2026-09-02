@@ -1,0 +1,85 @@
+name: mahosample
+
+services:
+  mahosample-postgres:
+    image: postgres:15
+    container_name: mahosample-prod-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - mahosample_prod_postgres_data:/var/lib/postgresql/data
+    networks:
+      - mahosample_prod_internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  mahosample-api:
+    build:
+      context: ../../backend
+    container_name: mahosample-prod-api
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@mahosample-postgres:5432/${POSTGRES_DB}
+      API_CORS_ORIGINS: ${PUBLIC_APP_URL}
+      APP_ENV: production
+    depends_on:
+      mahosample-postgres:
+        condition: service_healthy
+    networks:
+      - mahosample_prod_internal
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=5).read()\""]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  mahosample-frontend:
+    build:
+      context: ../../frontend
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+    container_name: mahosample-prod-frontend
+    restart: unless-stopped
+    networks:
+      - mahosample_prod_internal
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  mahosample-proxy:
+    image: caddy:2.8-alpine
+    container_name: mahosample-prod-proxy
+    restart: unless-stopped
+    depends_on:
+      - mahosample-api
+      - mahosample-frontend
+    ports:
+      - "${MAHOSAMPLE_HTTP_PORT:-18080}:8080"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - mahosample_prod_caddy_data:/data
+      - mahosample_prod_caddy_config:/config
+    networks:
+      - mahosample_prod_internal
+
+networks:
+  mahosample_prod_internal:
+    name: mahosample_prod_internal
+
+volumes:
+  mahosample_prod_postgres_data:
+    name: mahosample_prod_postgres_data
+  mahosample_prod_caddy_data:
+    name: mahosample_prod_caddy_data
+  mahosample_prod_caddy_config:
+    name: mahosample_prod_caddy_config

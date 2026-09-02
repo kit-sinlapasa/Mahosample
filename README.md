@@ -60,6 +60,11 @@ frontend/  React Vite application
 docs/      Project documentation
 ```
 
+## Hostinger VPS Deployment
+
+Production Docker Compose files for Hostinger VPS live in `deploy/hostinger`.
+Use `docs/hostinger-vps-deploy.md` for the deploy steps and safety notes.
+
 ## Branching & Commit Convention
 
 - Do not push directly to `main`.
