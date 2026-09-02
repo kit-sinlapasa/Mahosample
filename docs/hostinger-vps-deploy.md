@@ -42,6 +42,7 @@ Edit `deploy/hostinger/.env.production` and set real values:
 - `POSTGRES_PASSWORD`
 - `JWT_SECRET`
 - `PUBLIC_APP_URL=https://maho.kitaith.com`
+- `MAHOSAMPLE_HOST=maho.kitaith.com`
 - `VITE_API_BASE_URL=` stays blank when the frontend and API are served from the same domain.
 
 Then run:
@@ -71,9 +72,14 @@ Do not delete existing records for `@`, `www`, or `line`.
 
 ## Domain Routing
 
-The safe default proxy listens on host port `18080`. If the VPS already uses Traefik for public traffic, route `maho.kitaith.com` to `http://127.0.0.1:18080` from the existing Traefik setup.
+The safe default proxy listens on host port `18080`. The proxy container also has Traefik labels for Hostinger's existing Traefik service:
 
-If no service is using ports `80` and `443`, the Caddyfile can be changed later to enable HTTPS directly. Inspect the current VPS first before changing public ports.
+- Host: `maho.kitaith.com`
+- Entry point: `websecure`
+- Certificate resolver: `letsencrypt`
+- Service port: `8080`
+
+If Traefik is not present, keep using `http://<server-ip>:18080` or configure a direct HTTPS proxy after inspecting the current VPS.
 
 ## Update Deploy
 
