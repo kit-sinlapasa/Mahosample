@@ -471,6 +471,11 @@ export default function App() {
             className="success-dialog"
             role="dialog"
           >
+            <div className="success-dialog-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" role="img">
+                <path d="M20 6 9 17l-5-5" />
+              </svg>
+            </div>
             <p className="eyebrow">ส่งแบบฟอร์มเรียบร้อย</p>
             <h2 id="registration-success-title">ลงทะเบียนสำเร็จ</h2>
             <p className="success-dialog-request">
