@@ -48,11 +48,20 @@ const experiences = [
   ["received_sample", "เคยได้รับตัวอย่าง"],
 ];
 
-function TextField({ label, name, value, onChange, required = false, type = "text" }) {
+function TextField({
+  label,
+  name,
+  value,
+  onChange,
+  required = false,
+  type = "text",
+  ...inputProps
+}) {
   return (
     <label className="field">
       <span>{label}</span>
       <input
+        {...inputProps}
         name={name}
         onChange={onChange}
         required={required}
@@ -61,6 +70,48 @@ function TextField({ label, name, value, onChange, required = false, type = "tex
       />
     </label>
   );
+}
+
+function digitsOnly(value) {
+  return value.replace(/\D/g, "");
+}
+
+function getClientValidationError(form) {
+  if (digitsOnly(form.phone).length < 9) {
+    return "กรุณากรอกเบอร์โทรศัพท์ให้ครบอย่างน้อย 9 หลัก";
+  }
+  if (digitsOnly(form.postal_code).length < 5) {
+    return "กรุณากรอกรหัสไปรษณีย์ให้ครบ 5 หลัก";
+  }
+  if (form.health_interest === "other" && !form.health_interest_other.trim()) {
+    return "กรุณาระบุข้อมูลเพิ่มเติม เมื่อเลือกความสนใจเป็น “อื่น ๆ”";
+  }
+  return "";
+}
+
+function getApiErrorMessage(error) {
+  if (error.response?.status === 409) {
+    return "ข้อมูลนี้เคยลงทะเบียนแล้ว กรุณาติดต่อเจ้าหน้าที่";
+  }
+
+  const details = error.response?.data?.detail;
+  if (Array.isArray(details)) {
+    const fieldNames = details.map((detail) => detail.loc?.at(-1));
+    if (fieldNames.includes("phone")) {
+      return "กรุณาตรวจสอบเบอร์โทรศัพท์ ต้องมีอย่างน้อย 9 หลัก";
+    }
+    if (fieldNames.includes("postal_code")) {
+      return "กรุณาตรวจสอบรหัสไปรษณีย์ ต้องมีอย่างน้อย 5 หลัก";
+    }
+    if (fieldNames.includes("email")) {
+      return "กรุณาตรวจสอบอีเมลให้ถูกต้อง หรือเว้นว่างไว้";
+    }
+    if (fieldNames.includes("health_interest_other")) {
+      return "กรุณาระบุข้อมูลเพิ่มเติม เมื่อเลือกความสนใจเป็น “อื่น ๆ”";
+    }
+  }
+
+  return "ส่งแบบฟอร์มไม่สำเร็จ กรุณาตรวจสอบข้อมูลอีกครั้ง";
 }
 
 function SelectField({ label, name, value, onChange, options }) {
@@ -100,6 +151,13 @@ export default function App() {
 
   async function submitForm(event) {
     event.preventDefault();
+    const validationError = getClientValidationError(form);
+    if (validationError) {
+      setFormError(validationError);
+      setCreatedRequest(null);
+      return;
+    }
+
     setSubmitting(true);
     setFormError("");
     setCreatedRequest(null);
@@ -116,11 +174,7 @@ export default function App() {
       setCreatedRequest(response.data);
       setForm(initialForm);
     } catch (error) {
-      setFormError(
-        error.response?.status === 409
-          ? "ข้อมูลนี้เคยลงทะเบียนแล้ว กรุณาติดต่อเจ้าหน้าที่"
-          : "ส่งแบบฟอร์มไม่สำเร็จ กรุณาตรวจสอบข้อมูลอีกครั้ง",
-      );
+      setFormError(getApiErrorMessage(error));
     } finally {
       setSubmitting(false);
     }
@@ -182,6 +236,9 @@ export default function App() {
                 label="เบอร์โทรศัพท์"
                 name="phone"
                 onChange={updateField}
+                inputMode="tel"
+                minLength={9}
+                placeholder="เช่น 0812345678"
                 required
                 value={form.phone}
               />
@@ -288,6 +345,9 @@ export default function App() {
                 label="รหัสไปรษณีย์"
                 name="postal_code"
                 onChange={updateField}
+                inputMode="numeric"
+                minLength={5}
+                placeholder="เช่น 10230"
                 required
                 value={form.postal_code}
               />
