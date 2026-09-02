@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
 import { apiClient } from "../../api/client";
 
@@ -268,6 +269,9 @@ export default function StaffApp() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2>รายการลงทะเบียน</h2>
             <div className="flex flex-wrap gap-2">
+              <Link className="btn btn-secondary" to="/staff/requests">
+                ตารางข้อมูลเต็ม
+              </Link>
               <button className="btn btn-secondary" onClick={clearFilters} type="button">
                 ล้าง filter
               </button>

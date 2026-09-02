@@ -246,6 +246,8 @@
   .staff-page .field,
   .staff-page .metric p,
   .staff-page .metric strong,
+  .staff-page .detail-list dt,
+  .staff-page .detail-list dd,
   .staff-page .status-current,
   .staff-page .table-sort-button,
   .staff-page .data-table th,
@@ -312,5 +314,41 @@
 
   .empty-table-cell {
     @apply py-8 text-center text-zinc-500;
+  }
+
+  .full-data-table {
+    @apply min-w-[120rem];
+  }
+
+  .clickable-row {
+    @apply cursor-pointer transition hover:bg-[#fffaf4];
+  }
+
+  .detail-drawer-backdrop {
+    @apply fixed inset-0 z-50 flex justify-end bg-zinc-950/35;
+  }
+
+  .detail-drawer {
+    @apply h-full w-full max-w-3xl overflow-y-auto bg-white p-5 shadow-xl;
+  }
+
+  .detail-drawer textarea {
+    @apply w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100;
+  }
+
+  .detail-list {
+    @apply mt-6 grid gap-3 sm:grid-cols-2;
+  }
+
+  .detail-list div {
+    @apply rounded-md border border-zinc-200 bg-zinc-50 p-3;
+  }
+
+  .detail-list dt {
+    @apply text-xs text-zinc-500;
+  }
+
+  .detail-list dd {
+    @apply mt-1 break-words text-sm text-zinc-800;
   }
 }
