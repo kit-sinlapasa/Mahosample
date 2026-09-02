@@ -25,6 +25,7 @@ const healthInterestOptions = [
 const mahoExperienceOptions = ["never", "used", "received_sample"];
 const contactChannelOptions = ["phone", "line", "messenger"];
 const consentOptions = [true, false];
+const displayLimit = 100;
 const requestStatusLabels = {
   pending: "รอตรวจสอบ",
   approved: "อนุมัติแล้ว",
@@ -95,9 +96,9 @@ const tableColumns = [
   { key: "shipping_status", label: "ขนส่ง", type: "select", options: shippingStatusOptions },
   { key: "tracking_number", label: "Tracking" },
   { key: "tracking_url", label: "Tracking URL" },
-  { key: "shipped_at", label: "วันที่ส่ง" },
+  { key: "shipped_at", label: "วันที่ส่ง", type: "dateRange" },
   { key: "notes", label: "หมายเหตุ" },
-  { key: "created_at", label: "วันที่ลงทะเบียน" },
+  { key: "created_at", label: "วันที่ลงทะเบียน", type: "dateRange" },
   { key: "updated_at", label: "อัปเดตล่าสุด" },
 ];
 const detailFields = [
@@ -133,6 +134,29 @@ const detailFields = [
 
 function normalize(value) {
   return String(value || "").trim().toLowerCase();
+}
+
+function toDateTime(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date;
+}
+
+function isInDateRange(value, from, to) {
+  if (!from && !to) return true;
+  const date = toDateTime(value);
+  if (!date) return false;
+
+  if (from) {
+    const start = new Date(`${from}T00:00:00`);
+    if (date < start) return false;
+  }
+  if (to) {
+    const end = new Date(`${to}T23:59:59.999`);
+    if (date > end) return false;
+  }
+  return true;
 }
 
 function displayValue(value) {
@@ -183,9 +207,16 @@ export default function StaffRequestsPage() {
   const [notes, setNotes] = useState("");
   const authHeaders = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
 
-  const visibleRequests = useMemo(() => {
+  const filteredRequests = useMemo(() => {
     const filtered = requests.filter((request) =>
       tableColumns.every((column) => {
+        if (column.type === "dateRange") {
+          return isInDateRange(
+            request[column.key],
+            filters[`${column.key}_from`],
+            filters[`${column.key}_to`],
+          );
+        }
         const filterValue = filters[column.key];
         if (!filterValue) return true;
         const requestValue = request[column.key];
@@ -204,16 +235,29 @@ export default function StaffRequestsPage() {
       );
     });
   }, [filters, requests, sortConfig]);
+  const displayedRequests = useMemo(
+    () => filteredRequests.slice(0, displayLimit),
+    [filteredRequests],
+  );
 
   async function loadRequests() {
     if (!token) return;
     setLoading(true);
     setMessage("");
     try {
-      const response = await apiClient.get("/api/admin/sample-requests?limit=100", {
-        headers: authHeaders,
-      });
-      setRequests(response.data.items);
+      const allItems = [];
+      let total = 0;
+      let offset = 0;
+      do {
+        const response = await apiClient.get(
+          `/api/admin/sample-requests?offset=${offset}&limit=${displayLimit}`,
+          { headers: authHeaders },
+        );
+        total = response.data.total;
+        allItems.push(...response.data.items);
+        offset += displayLimit;
+      } while (allItems.length < total);
+      setRequests(allItems);
     } catch {
       setMessage("โหลดข้อมูลไม่สำเร็จ กรุณา login ใหม่");
     } finally {
@@ -288,7 +332,7 @@ export default function StaffRequestsPage() {
   function exportVisibleCsv() {
     const rows = [
       tableColumns.map((column) => toCsvValue(column.label)).join(","),
-      ...visibleRequests.map((request) =>
+      ...filteredRequests.map((request) =>
         tableColumns.map((column) => toCsvValue(request[column.key])).join(","),
       ),
     ];
@@ -354,7 +398,8 @@ export default function StaffRequestsPage() {
             <div>
               <h2>รายการทั้งหมด</h2>
               <p className="mt-1 text-sm text-zinc-600">
-                แสดง {visibleRequests.length} จาก {requests.length} รายการ
+                แสดง {displayedRequests.length} จาก {filteredRequests.length} รายการที่ตรงกับ filter
+                ทั้งหมด {requests.length} รายการ
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -395,7 +440,26 @@ export default function StaffRequestsPage() {
                 <tr className="filter-row">
                   {tableColumns.map((column) => (
                     <th key={`${column.key}-filter`}>
-                      {column.type === "select" ? (
+                      {column.type === "dateRange" ? (
+                        <div className="date-range-filter">
+                          <input
+                            aria-label={`filter ${column.label} จากวันที่`}
+                            onChange={(event) =>
+                              updateFilter(`${column.key}_from`, event.target.value)
+                            }
+                            type="date"
+                            value={filters[`${column.key}_from`] || ""}
+                          />
+                          <input
+                            aria-label={`filter ${column.label} ถึงวันที่`}
+                            onChange={(event) =>
+                              updateFilter(`${column.key}_to`, event.target.value)
+                            }
+                            type="date"
+                            value={filters[`${column.key}_to`] || ""}
+                          />
+                        </div>
+                      ) : column.type === "select" ? (
                         <select
                           aria-label={`filter ${column.label}`}
                           onChange={(event) => updateFilter(column.key, event.target.value)}
@@ -421,7 +485,7 @@ export default function StaffRequestsPage() {
                 </tr>
               </thead>
               <tbody>
-                {visibleRequests.map((request) => (
+                {displayedRequests.map((request) => (
                   <tr
                     className={`clickable-row ${hasTrackingNumber(request) ? "" : "missing-tracking-row"}`}
                     key={request.request_no}
@@ -434,7 +498,7 @@ export default function StaffRequestsPage() {
                     ))}
                   </tr>
                 ))}
-                {visibleRequests.length === 0 && (
+                {filteredRequests.length === 0 && (
                   <tr>
                     <td className="empty-table-cell" colSpan={tableColumns.length}>
                       ไม่พบข้อมูลตาม filter ที่เลือก
