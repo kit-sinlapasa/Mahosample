@@ -216,7 +216,7 @@ export default function StaffApp() {
 
           <form className="mt-4 flex flex-col gap-3 sm:flex-row" onSubmit={importTracking}>
             <input
-              accept=".csv,text/csv"
+              accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               className="file-input"
               onChange={(event) => setImportFile(event.target.files?.[0] || null)}
               type="file"
