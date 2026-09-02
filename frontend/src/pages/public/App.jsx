@@ -132,7 +132,7 @@ export default function App() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <div>
             <p className="eyebrow">Mahosample</p>
-            <h1 className="text-xl font-bold">ลงทะเบียนรับตัวอย่าง MAHO</h1>
+            <h1 className="text-xl font-bold">ลงทะเบียนรับตัวอย่าง มะโฮ</h1>
           </div>
           <Link className="btn btn-secondary" to="/staff">
             Staff
