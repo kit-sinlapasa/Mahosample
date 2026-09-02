@@ -329,6 +329,14 @@
     @apply h-9 min-w-28 border-zinc-200 bg-zinc-50 text-xs;
   }
 
+  .date-range-filter {
+    @apply flex min-w-48 flex-col gap-1;
+  }
+
+  .date-range-filter input {
+    @apply min-w-0;
+  }
+
   .empty-table-cell {
     @apply py-8 text-center text-zinc-500;
   }
