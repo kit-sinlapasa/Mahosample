@@ -135,12 +135,17 @@ export default function StaffApp() {
           <h1 className="text-2xl">เข้าสู่ระบบพนักงาน</h1>
           <label className="field">
             <span>Email</span>
-            <input onChange={(event) => setEmail(event.target.value)} value={email} />
+            <input
+              autoComplete="username"
+              onChange={(event) => setEmail(event.target.value)}
+              value={email}
+            />
           </label>
           <label className="field">
             <span>Password</span>
             <input
               onChange={(event) => setPassword(event.target.value)}
+              autoComplete="current-password"
               type="password"
               value={password}
             />
