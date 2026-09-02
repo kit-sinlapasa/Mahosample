@@ -50,6 +50,14 @@
     @apply border-amber-200 bg-white/95 focus:border-[#2f3d83] focus:ring-[#d9ad5c]/30;
   }
 
+  .public-page h2,
+  .public-page .field,
+  .public-page .btn,
+  .public-page .brand-chip,
+  .public-page .eyebrow {
+    @apply font-normal;
+  }
+
   .brand-hero {
     @apply rounded-lg border border-amber-100 bg-white/80 p-6 shadow-sm sm:p-8;
   }
