@@ -316,6 +316,10 @@
     @apply flex w-full min-w-max items-center justify-between gap-2 text-left text-sm text-zinc-700;
   }
 
+  .table-link {
+    @apply inline-block max-w-72 break-all text-[#25347c] underline underline-offset-4 hover:text-[#d68019];
+  }
+
   .filter-row th {
     @apply bg-white px-2 py-2;
   }

@@ -141,6 +141,23 @@ function displayValue(value) {
   return valueLabels[value] || value;
 }
 
+function renderDisplayValue(key, value) {
+  const display = displayValue(value);
+  if (key !== "tracking_url" || display === "-") return display;
+
+  return (
+    <a
+      className="table-link"
+      href={value}
+      onClick={(event) => event.stopPropagation()}
+      rel="noreferrer"
+      target="_blank"
+    >
+      {display}
+    </a>
+  );
+}
+
 function toCsvValue(value) {
   const text = String(displayValue(value)).replaceAll('"', '""');
   return `"${text}"`;
@@ -412,7 +429,7 @@ export default function StaffRequestsPage() {
                   >
                     {tableColumns.map((column) => (
                       <td key={`${request.request_no}-${column.key}`}>
-                        {displayValue(request[column.key])}
+                        {renderDisplayValue(column.key, request[column.key])}
                       </td>
                     ))}
                   </tr>
@@ -487,7 +504,7 @@ export default function StaffRequestsPage() {
               {detailFields.map(([label, key]) => (
                 <div key={key}>
                   <dt>{label}</dt>
-                  <dd>{displayValue(selectedRequest[key])}</dd>
+                  <dd>{renderDisplayValue(key, selectedRequest[key])}</dd>
                 </div>
               ))}
             </dl>
