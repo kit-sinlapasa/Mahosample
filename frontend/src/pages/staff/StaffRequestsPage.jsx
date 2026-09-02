@@ -146,6 +146,10 @@ function toCsvValue(value) {
   return `"${text}"`;
 }
 
+function hasTrackingNumber(request) {
+  return Boolean(request.tracking_number?.trim());
+}
+
 export default function StaffRequestsPage() {
   const [token, setToken] = useState(() => localStorage.getItem("mahosample_token") || "");
   const [email, setEmail] = useState("admin@mahosample.com");
@@ -402,7 +406,7 @@ export default function StaffRequestsPage() {
               <tbody>
                 {visibleRequests.map((request) => (
                   <tr
-                    className="clickable-row"
+                    className={`clickable-row ${hasTrackingNumber(request) ? "" : "missing-tracking-row"}`}
                     key={request.request_no}
                     onClick={() => openDetail(request)}
                   >

@@ -66,6 +66,10 @@ function getSortValue(request, key) {
   return request[key] || "";
 }
 
+function hasTrackingNumber(request) {
+  return Boolean(request.tracking_number?.trim());
+}
+
 export default function StaffApp() {
   const [token, setToken] = useState(() => localStorage.getItem("mahosample_token") || "");
   const [email, setEmail] = useState("staff.demo@example.com");
@@ -399,7 +403,7 @@ function StaffRow({ request, onSave, onShipping }) {
   const [notes, setNotes] = useState(request.notes || "");
 
   return (
-    <tr>
+    <tr className={hasTrackingNumber(request) ? undefined : "missing-tracking-row"}>
       <td>{request.request_no}</td>
       <td>{request.full_name}</td>
       <td>{request.phone}</td>
