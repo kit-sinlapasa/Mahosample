@@ -35,6 +35,44 @@ def test_public_user_can_create_sample_request(client: TestClient) -> None:
     assert body["shipping_status"] == "not_ready"
 
 
+def test_public_user_can_create_sample_request_with_line_only(client: TestClient) -> None:
+    payload = valid_sample_request_payload()
+    payload["phone"] = "0812345680"
+    payload["email"] = None
+    payload["line_id"] = "somchai-line-only"
+    payload["messenger_id"] = None
+
+    response = client.post("/api/public/sample-requests", json=payload)
+
+    assert response.status_code == 201
+
+
+def test_public_user_can_create_sample_request_with_messenger_only(client: TestClient) -> None:
+    payload = valid_sample_request_payload()
+    payload["phone"] = "0812345681"
+    payload["email"] = None
+    payload["line_id"] = None
+    payload["messenger_id"] = "somchai-messenger-only"
+
+    response = client.post("/api/public/sample-requests", json=payload)
+
+    assert response.status_code == 201
+
+
+def test_public_sample_request_requires_at_least_one_contact_channel(
+    client: TestClient,
+) -> None:
+    payload = valid_sample_request_payload()
+    payload["phone"] = "0812345682"
+    payload["email"] = None
+    payload["line_id"] = None
+    payload["messenger_id"] = None
+
+    response = client.post("/api/public/sample-requests", json=payload)
+
+    assert response.status_code == 422
+
+
 def test_public_sample_request_requires_pdpa_consent(client: TestClient) -> None:
     payload = valid_sample_request_payload()
     payload["phone"] = "0812345679"

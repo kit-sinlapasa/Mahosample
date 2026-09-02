@@ -76,17 +76,50 @@ function digitsOnly(value) {
   return value.replace(/\D/g, "");
 }
 
-function getClientValidationError(form) {
+function hasContactChannel(form) {
+  return Boolean(
+    form.email.trim() || form.line_id.trim() || form.messenger_id.trim(),
+  );
+}
+
+function getClientValidationErrors(form) {
+  const errors = [];
+
+  if (!form.full_name.trim()) {
+    errors.push("กรุณากรอกชื่อ-นามสกุล");
+  }
   if (digitsOnly(form.phone).length < 9) {
-    return "กรุณากรอกเบอร์โทรศัพท์ให้ครบอย่างน้อย 9 หลัก";
+    errors.push("กรุณากรอกเบอร์โทรศัพท์ให้ครบอย่างน้อย 9 หลัก");
+  }
+  if (!hasContactChannel(form)) {
+    errors.push("กรุณากรอกช่องทางติดต่ออย่างน้อย 1 อย่าง: อีเมล, LINE ID หรือ Facebook Messenger");
+  }
+  if (!form.recipient_name.trim()) {
+    errors.push("กรุณากรอกชื่อผู้รับ");
+  }
+  if (!form.address_line1.trim()) {
+    errors.push("กรุณากรอกบ้านเลขที่/อาคาร/หมู่บ้าน");
+  }
+  if (!form.subdistrict.trim()) {
+    errors.push("กรุณากรอกตำบล/แขวง");
+  }
+  if (!form.district.trim()) {
+    errors.push("กรุณากรอกอำเภอ/เขต");
+  }
+  if (!form.province.trim()) {
+    errors.push("กรุณากรอกจังหวัด");
   }
   if (digitsOnly(form.postal_code).length < 5) {
-    return "กรุณากรอกรหัสไปรษณีย์ให้ครบ 5 หลัก";
+    errors.push("กรุณากรอกรหัสไปรษณีย์ให้ครบ 5 หลัก");
   }
   if (form.health_interest === "other" && !form.health_interest_other.trim()) {
-    return "กรุณาระบุข้อมูลเพิ่มเติม เมื่อเลือกความสนใจเป็น “อื่น ๆ”";
+    errors.push("กรุณาระบุข้อมูลเพิ่มเติม เมื่อเลือกความสนใจเป็น “อื่น ๆ”");
   }
-  return "";
+  if (!form.pdpa_consent) {
+    errors.push("กรุณายินยอมให้ใช้ข้อมูลเพื่อจัดส่งตัวอย่าง");
+  }
+
+  return errors;
 }
 
 function getApiErrorMessage(error) {
@@ -108,6 +141,13 @@ function getApiErrorMessage(error) {
     }
     if (fieldNames.includes("health_interest_other")) {
       return "กรุณาระบุข้อมูลเพิ่มเติม เมื่อเลือกความสนใจเป็น “อื่น ๆ”";
+    }
+    if (
+      fieldNames.includes("email")
+      || fieldNames.includes("line_id")
+      || fieldNames.includes("messenger_id")
+    ) {
+      return "กรุณากรอกช่องทางติดต่ออย่างน้อย 1 อย่าง: อีเมล, LINE ID หรือ Facebook Messenger";
     }
   }
 
@@ -151,9 +191,9 @@ export default function App() {
 
   async function submitForm(event) {
     event.preventDefault();
-    const validationError = getClientValidationError(form);
-    if (validationError) {
-      setFormError(validationError);
+    const validationErrors = getClientValidationErrors(form);
+    if (validationErrors.length > 0) {
+      setFormError(validationErrors);
       setCreatedRequest(null);
       return;
     }
@@ -246,6 +286,7 @@ export default function App() {
                 label="อีเมล"
                 name="email"
                 onChange={updateField}
+                placeholder="กรอกอีเมล หรือเลือกกรอก LINE/Facebook แทน"
                 type="email"
                 value={form.email}
               />
@@ -253,12 +294,14 @@ export default function App() {
                 label="LINE ID"
                 name="line_id"
                 onChange={updateField}
+                placeholder="กรอก LINE ID หรือเลือกกรอกอีเมล/Facebook แทน"
                 value={form.line_id}
               />
               <TextField
                 label="Facebook Messenger"
                 name="messenger_id"
                 onChange={updateField}
+                placeholder="กรอกชื่อบัญชี หรือเลือกกรอกอีเมล/LINE แทน"
                 value={form.messenger_id}
               />
               <SelectField
@@ -288,7 +331,7 @@ export default function App() {
                 value={form.health_interest_other}
               />
               <SelectField
-                label="ประสบการณ์กับ MAHO"
+                label="ประสบการณ์กับ มะโฮ"
                 name="maho_experience"
                 onChange={updateField}
                 options={experiences}
@@ -375,7 +418,19 @@ export default function App() {
             </label>
           </section>
 
-          {formError && <p className="alert error">{formError}</p>}
+          {formError && (
+            <div className="alert error">
+              {Array.isArray(formError) ? (
+                <ul className="validation-list">
+                  {formError.map((errorMessage) => (
+                    <li key={errorMessage}>{errorMessage}</li>
+                  ))}
+                </ul>
+              ) : (
+                formError
+              )}
+            </div>
+          )}
           <button className="btn btn-primary w-full sm:w-auto" disabled={!canSubmit} type="submit">
             {submitting ? "กำลังส่ง..." : "ส่งแบบฟอร์ม"}
           </button>

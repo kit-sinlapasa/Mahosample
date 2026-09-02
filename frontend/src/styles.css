@@ -210,6 +210,10 @@
     @apply bg-[#fff4df] text-[#111947];
   }
 
+  .validation-list {
+    @apply list-disc space-y-1 pl-5;
+  }
+
   .link {
     @apply mt-2 inline-flex font-semibold text-[#25347c] underline-offset-4 hover:underline;
   }
