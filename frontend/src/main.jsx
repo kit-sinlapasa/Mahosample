@@ -5,6 +5,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import App from "./pages/public/App.jsx";
 import TrackingPage from "./pages/public/TrackingPage.jsx";
 import StaffApp from "./pages/staff/StaffApp.jsx";
+import StaffRequestsPage from "./pages/staff/StaffRequestsPage.jsx";
 import "./styles.css";
 
 const router = createBrowserRouter([
@@ -15,6 +16,10 @@ const router = createBrowserRouter([
   {
     path: "/staff",
     element: <StaffApp />,
+  },
+  {
+    path: "/staff/requests",
+    element: <StaffRequestsPage />,
   },
   {
     path: "/tracking",
