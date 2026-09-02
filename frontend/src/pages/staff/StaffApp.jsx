@@ -13,6 +13,12 @@ const statusOptions = [
 ];
 const shippingOptions = ["not_ready", "ready_to_ship", "shipped", "delivered", "failed"];
 
+function getDownloadFilename(response, fallback) {
+  const disposition = response.headers["content-disposition"];
+  const filenameMatch = disposition?.match(/filename="?([^"]+)"?/i);
+  return filenameMatch?.[1] || fallback;
+}
+
 export default function StaffApp() {
   const [token, setToken] = useState(() => localStorage.getItem("mahosample_token") || "");
   const [email, setEmail] = useState("staff.demo@example.com");
@@ -100,9 +106,10 @@ export default function StaffApp() {
     const url = window.URL.createObjectURL(new Blob([response.data], { type: "text/csv" }));
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = "mahosample-post-office-export.csv";
+    anchor.download = getDownloadFilename(response, "ImportRecipientBook.csv");
     anchor.click();
     window.URL.revokeObjectURL(url);
+    setMessage("Export เฉพาะรายการที่ Tracking ว่างแล้ว");
   }
 
   async function importTracking(event) {
@@ -177,10 +184,14 @@ export default function StaffApp() {
                 {loading ? "กำลังโหลด..." : "Refresh"}
               </button>
               <button className="btn btn-primary" onClick={exportCsv} type="button">
-                Export CSV
+                Export Tracking ว่าง
               </button>
             </div>
           </div>
+          <p className="mt-2 text-sm text-zinc-600">
+            Export เป็นไฟล์ ImportRecipientBook_yyyy-mm-dd.csv สำหรับนำไปใช้กับ template ขนส่ง
+            โดยดึงเฉพาะรายการที่ยังไม่มีเลข Tracking
+          </p>
 
           <form className="mt-4 flex flex-col gap-3 sm:flex-row" onSubmit={importTracking}>
             <input

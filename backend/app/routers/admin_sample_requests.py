@@ -1,4 +1,5 @@
 import csv
+from datetime import date
 from io import StringIO
 from typing import Annotated
 
@@ -68,7 +69,7 @@ def export_post_office_csv(
     db: Annotated[Session, Depends(get_db)],
     _: Annotated[User, Depends(require_staff_user)],
 ) -> Response:
-    sample_requests = sample_request_service.list_ready_to_ship_requests(db)
+    sample_requests = sample_request_service.list_requests_without_tracking(db)
     output = StringIO()
     writer = csv.DictWriter(
         output,
@@ -82,7 +83,9 @@ def export_post_office_csv(
         content=f"\ufeff{output.getvalue()}",
         media_type="text/csv; charset=utf-8",
         headers={
-            "Content-Disposition": 'attachment; filename="mahosample-post-office-export.csv"',
+            "Content-Disposition": (
+                f'attachment; filename="ImportRecipientBook_{date.today().isoformat()}.csv"'
+            ),
         },
     )
 
