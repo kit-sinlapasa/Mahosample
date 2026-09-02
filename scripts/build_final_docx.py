@@ -10,11 +10,15 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Inches, Pt, RGBColor
+from PIL import Image
 
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
 OUTPUT = DOCS / "Mahosample-final-project-report.docx"
+EVIDENCE = ROOT / "outputs" / "e2e-evidence"
+SCREENSHOTS = EVIDENCE / "screenshots"
+DOCX_IMAGE_DIR = EVIDENCE / "docx-images-final-report"
 
 SOURCE_FILES = [
     ("รายงานฉบับสมบูรณ์", DOCS / "final-project-report.md"),
@@ -28,6 +32,22 @@ SOURCE_FILES = [
     ("ภาคผนวก H: Test Report", DOCS / "test-report-2026-09-02.md"),
     ("ภาคผนวก I: Staff User Guide", DOCS / "staff-user-guide.md"),
 ]
+
+SCREENSHOT_LABELS = {
+    "public-registration-form": "หน้าแบบฟอร์มลงทะเบียนรับตัวอย่าง มะโฮ",
+    "public-contact-validation": "Validation เมื่อไม่กรอกช่องทางติดต่อ",
+    "public-success-card": "Success card หลังส่งฟอร์ม พร้อมเลขรายการภายใน",
+    "tracking-found": "หน้าเช็คสถานะพบเลข tracking และ Tracking URL",
+    "tracking-not-found": "หน้าเช็คสถานะเมื่อไม่พบเลข tracking",
+    "staff-dashboard": "Dashboard พนักงานหลัง login",
+    "staff-full-table": "หน้าตารางข้อมูลเต็ม แสดง column ข้อมูลทั้งหมด",
+    "staff-filter-province": "Filter header ตารางด้วยจังหวัด",
+    "staff-date-range-filter": "Filter วันที่ส่งและวันที่ลงทะเบียนแบบช่วงเวลา",
+    "staff-sorting": "Sorting จาก header ตาราง",
+    "staff-detail-drawer": "Drawer รายละเอียด พร้อมบันทึกคำขอและอัปเดตขนส่ง",
+    "staff-tracking-url-link": "Tracking URL แสดงเป็น link คลิกได้",
+    "staff-export": "Export CSV จากหน้าพนักงาน",
+}
 
 
 def set_run_font(run, size=None, bold=None, color=None, font="Aptos"):
@@ -315,6 +335,53 @@ def add_markdown_file(doc, title, path, first=False):
         add_code_block(doc, "\n".join(code_lines))
 
 
+def latest_screenshot_stamp() -> str | None:
+    if not SCREENSHOTS.exists():
+        return None
+    stamps = []
+    for file in SCREENSHOTS.glob("*.png"):
+        match = re.match(r"(\d{14})-", file.name)
+        if match:
+            stamps.append(match.group(1))
+    return sorted(stamps)[-1] if stamps else None
+
+
+def prepare_screenshot_for_docx(path: Path) -> Path:
+    DOCX_IMAGE_DIR.mkdir(parents=True, exist_ok=True)
+    image = Image.open(path).convert("RGB")
+    canvas = Image.new("RGB", (1600, 1050), "white")
+    image.thumbnail((1504, 900))
+    x = (1600 - image.width) // 2
+    y = (1050 - image.height) // 2
+    canvas.paste(image, (x, y))
+    output = DOCX_IMAGE_DIR / path.name
+    canvas.save(output, quality=92)
+    return output
+
+
+def add_screenshot_appendix(doc):
+    stamp = latest_screenshot_stamp()
+    if not stamp:
+        return
+
+    doc.add_section(WD_SECTION.NEW_PAGE)
+    doc.add_paragraph("ภาคผนวก J: Screen Capture Evidence", style="Heading 1")
+    intro = doc.add_paragraph()
+    add_markdown_text(
+        intro,
+        "ภาพหน้าจอชุดนี้จับจาก production URL เพื่อใช้เป็นหลักฐานประกอบการทดสอบ flow หลักของระบบ",
+    )
+
+    for index, (name, caption) in enumerate(SCREENSHOT_LABELS.items(), start=1):
+        source = SCREENSHOTS / f"{stamp}-{name}.png"
+        if not source.exists():
+            continue
+        p = doc.add_paragraph(f"ภาพที่ {index}: {caption}", style="Heading 2")
+        p.paragraph_format.keep_with_next = True
+        prepared = prepare_screenshot_for_docx(source)
+        doc.add_picture(str(prepared), width=Inches(6.4))
+
+
 def main():
     doc = Document()
     setup_styles(doc)
@@ -322,6 +389,7 @@ def main():
     add_toc_placeholder(doc)
     for idx, (title, path) in enumerate(SOURCE_FILES):
         add_markdown_file(doc, title, path, first=(idx == 0))
+    add_screenshot_appendix(doc)
     doc.core_properties.title = "Mahosample Final Project Report"
     doc.core_properties.subject = "Final Software Project Report"
     doc.core_properties.author = "Mahosample Project Team"
