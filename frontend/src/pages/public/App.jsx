@@ -127,8 +127,8 @@ export default function App() {
   }
 
   return (
-    <main className="min-h-screen bg-stone-50 text-zinc-950">
-      <header className="border-b border-zinc-200 bg-white">
+    <main className="public-page min-h-screen text-zinc-950">
+      <header className="border-b border-amber-100 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <div>
             <p className="eyebrow">Mahosample</p>
@@ -139,6 +139,32 @@ export default function App() {
           </Link>
         </div>
       </header>
+
+      <section className="mx-auto grid max-w-6xl gap-6 px-4 pt-6 lg:grid-cols-[1fr_420px] lg:items-stretch">
+        <div className="brand-hero">
+          <p className="eyebrow">MAHO Beta-1,3/1,6-Glucan</p>
+          <h2 className="mt-3 max-w-2xl text-3xl font-bold leading-tight text-[#111947] sm:text-4xl">
+            รับตัวอย่างมะโฮแบบเจล ฟรี 2 ซอง
+          </h2>
+          <p className="mt-4 max-w-2xl text-base leading-7 text-zinc-700">
+            กรอกข้อมูลเพื่อให้เจ้าหน้าที่ตรวจสอบสิทธิ์และจัดส่งตัวอย่าง
+            พร้อมแจ้งเลข tracking หลังจัดส่งผ่าน LINE ID หรือ Facebook Messenger
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2 text-sm font-semibold">
+            <span className="brand-chip">ก่อตั้งจากญี่ปุ่น</span>
+            <span className="brand-chip">ดูแลสุขภาพ</span>
+            <span className="brand-chip">จัดส่งถึงบ้าน</span>
+          </div>
+        </div>
+
+        <figure className="brand-image-wrap">
+          <img
+            alt="ผู้ก่อตั้ง Aureo ถือผลิตภัณฑ์ MAHO"
+            className="brand-image"
+            src="/yk-talk.jpg"
+          />
+        </figure>
+      </section>
 
       <div className="mx-auto grid max-w-6xl gap-6 px-4 py-6 lg:grid-cols-[1fr_320px]">
         <form className="surface space-y-6" onSubmit={submitForm}>
