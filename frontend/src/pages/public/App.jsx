@@ -124,6 +124,16 @@ function getClientValidationErrors(form) {
 
 function getApiErrorMessage(error) {
   if (error.response?.status === 409) {
+    const detail = error.response?.data?.detail;
+    if (detail === "duplicate_phone_and_address") {
+      return "เบอร์โทรศัพท์และที่อยู่จัดส่งนี้เคยลงทะเบียนแล้ว กรุณาติดต่อเจ้าหน้าที่";
+    }
+    if (detail === "duplicate_phone") {
+      return "เบอร์โทรศัพท์นี้เคยลงทะเบียนแล้ว กรุณาติดต่อเจ้าหน้าที่";
+    }
+    if (detail === "duplicate_address") {
+      return "ที่อยู่จัดส่งนี้เคยลงทะเบียนแล้ว กรุณาติดต่อเจ้าหน้าที่";
+    }
     return "ข้อมูลนี้เคยลงทะเบียนแล้ว กรุณาติดต่อเจ้าหน้าที่";
   }
 
