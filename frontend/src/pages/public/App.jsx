@@ -226,25 +226,22 @@ export default function App() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <div>
             <p className="eyebrow">Mahosample</p>
-            <h1 className="text-xl font-bold">ลงทะเบียนรับตัวอย่าง มะโฮ</h1>
+            <h1 className="text-xl font-normal">ลงทะเบียนรับตัวอย่าง มะโฮ</h1>
           </div>
-          <Link className="btn btn-secondary" to="/staff">
-            Staff
-          </Link>
         </div>
       </header>
 
       <section className="mx-auto grid max-w-6xl gap-6 px-4 pt-6 lg:grid-cols-[1fr_420px] lg:items-stretch">
         <div className="brand-hero">
           <p className="eyebrow">MAHO Beta-1,3/1,6-Glucan</p>
-          <h2 className="mt-3 max-w-2xl text-3xl font-bold leading-tight text-[#111947] sm:text-4xl">
+          <h2 className="mt-3 max-w-2xl text-3xl font-normal leading-tight text-[#111947] sm:text-4xl">
             รับตัวอย่างมะโฮแบบเจล ฟรี 2 ซอง
           </h2>
-          <p className="mt-4 max-w-2xl text-base leading-7 text-zinc-700">
+          <p className="mt-4 max-w-2xl text-base font-normal leading-7 text-zinc-700">
             กรอกข้อมูลเพื่อให้เจ้าหน้าที่ตรวจสอบสิทธิ์และจัดส่งตัวอย่าง
             พร้อมแจ้งเลข tracking หลังจัดส่งผ่าน LINE ID หรือ Facebook Messenger
           </p>
-          <div className="mt-5 flex flex-wrap gap-2 text-sm font-semibold">
+          <div className="mt-5 flex flex-wrap gap-2 text-sm font-normal">
             <span className="brand-chip">ก่อตั้งจากญี่ปุ่น</span>
             <span className="brand-chip">ดูแลสุขภาพ</span>
             <span className="brand-chip">จัดส่งถึงบ้าน</span>
