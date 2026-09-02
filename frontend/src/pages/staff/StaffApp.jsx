@@ -28,11 +28,41 @@ const shippingStatusLabels = {
   delivered: "นำจ่ายสำเร็จ",
   failed: "จัดส่งไม่สำเร็จ",
 };
+const tableColumns = [
+  { key: "request_no", label: "เลขรายการ", filter: "text" },
+  { key: "full_name", label: "ลูกค้า", filter: "text" },
+  { key: "phone", label: "โทร", filter: "text" },
+  { key: "province", label: "จังหวัด", filter: "text" },
+  { key: "request_status", label: "คำขอ", filter: "select", options: statusOptions, labels: requestStatusLabels },
+  {
+    key: "shipping_status",
+    label: "ขนส่ง",
+    filter: "select",
+    options: shippingOptions,
+    labels: shippingStatusLabels,
+  },
+  { key: "tracking_number", label: "Tracking", filter: "text" },
+  { key: "actions", label: "บันทึก" },
+];
 
 function getDownloadFilename(response, fallback) {
   const disposition = response.headers["content-disposition"];
   const filenameMatch = disposition?.match(/filename="?([^"]+)"?/i);
   return filenameMatch?.[1] || fallback;
+}
+
+function normalizeForSearch(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function getSortValue(request, key) {
+  if (key === "request_status") {
+    return requestStatusLabels[request.request_status] || request.request_status || "";
+  }
+  if (key === "shipping_status") {
+    return shippingStatusLabels[request.shipping_status] || request.shipping_status || "";
+  }
+  return request[key] || "";
 }
 
 export default function StaffApp() {
@@ -45,8 +75,29 @@ export default function StaffApp() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [importFile, setImportFile] = useState(null);
+  const [filters, setFilters] = useState({});
+  const [sortConfig, setSortConfig] = useState({ key: "request_no", direction: "desc" });
 
   const authHeaders = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
+  const visibleRequests = useMemo(() => {
+    const filteredRequests = requests.filter((request) =>
+      tableColumns.every((column) => {
+        if (!column.filter) return true;
+        const filterValue = filters[column.key];
+        if (!filterValue) return true;
+        const rawValue = request[column.key];
+        if (column.filter === "select") return rawValue === filterValue;
+        return normalizeForSearch(rawValue).includes(normalizeForSearch(filterValue));
+      }),
+    );
+
+    return [...filteredRequests].sort((left, right) => {
+      const leftValue = normalizeForSearch(getSortValue(left, sortConfig.key));
+      const rightValue = normalizeForSearch(getSortValue(right, sortConfig.key));
+      const direction = sortConfig.direction === "asc" ? 1 : -1;
+      return leftValue.localeCompare(rightValue, "th", { numeric: true }) * direction;
+    });
+  }, [filters, requests, sortConfig]);
 
   async function loadDashboard() {
     if (!token) return;
@@ -86,6 +137,22 @@ export default function StaffApp() {
     setToken("");
     setRequests([]);
     setSummary(null);
+  }
+
+  function updateFilter(key, value) {
+    setFilters((currentFilters) => ({ ...currentFilters, [key]: value }));
+  }
+
+  function clearFilters() {
+    setFilters({});
+  }
+
+  function toggleSort(key) {
+    if (key === "actions") return;
+    setSortConfig((currentSort) => ({
+      key,
+      direction: currentSort.key === key && currentSort.direction === "asc" ? "desc" : "asc",
+    }));
   }
 
   async function updateShipping(requestNo, shippingStatus, trackingNumber) {
@@ -201,6 +268,9 @@ export default function StaffApp() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2>รายการลงทะเบียน</h2>
             <div className="flex flex-wrap gap-2">
+              <button className="btn btn-secondary" onClick={clearFilters} type="button">
+                ล้าง filter
+              </button>
               <button className="btn btn-secondary" onClick={loadDashboard} type="button">
                 {loading ? "กำลังโหลด..." : "Refresh"}
               </button>
@@ -232,18 +302,60 @@ export default function StaffApp() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>เลขรายการ</th>
-                  <th>ลูกค้า</th>
-                  <th>โทร</th>
-                  <th>จังหวัด</th>
-                  <th>คำขอ</th>
-                  <th>ขนส่ง</th>
-                  <th>Tracking</th>
-                  <th>บันทึก</th>
+                  {tableColumns.map((column) => (
+                    <th key={column.key}>
+                      {column.key === "actions" ? (
+                        column.label
+                      ) : (
+                        <button
+                          className="table-sort-button"
+                          onClick={() => toggleSort(column.key)}
+                          type="button"
+                        >
+                          <span>{column.label}</span>
+                          <span aria-hidden="true">
+                            {sortConfig.key === column.key
+                              ? sortConfig.direction === "asc"
+                                ? "↑"
+                                : "↓"
+                              : "↕"}
+                          </span>
+                        </button>
+                      )}
+                    </th>
+                  ))}
+                </tr>
+                <tr className="filter-row">
+                  {tableColumns.map((column) => (
+                    <th key={`${column.key}-filter`}>
+                      {column.filter === "text" && (
+                        <input
+                          aria-label={`filter ${column.label}`}
+                          onChange={(event) => updateFilter(column.key, event.target.value)}
+                          placeholder="ค้นหา"
+                          value={filters[column.key] || ""}
+                        />
+                      )}
+                      {column.filter === "select" && (
+                        <select
+                          aria-label={`filter ${column.label}`}
+                          onChange={(event) => updateFilter(column.key, event.target.value)}
+                          value={filters[column.key] || ""}
+                        >
+                          <option value="">ทั้งหมด</option>
+                          {column.options.map((option) => (
+                            <option key={option} value={option}>
+                              {column.labels[option] || option}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {requests.map((request) => (
+                {visibleRequests.map((request) => (
                   <StaffRow
                     key={request.request_no}
                     onSave={updateRequest}
@@ -251,6 +363,13 @@ export default function StaffApp() {
                     request={request}
                   />
                 ))}
+                {visibleRequests.length === 0 && (
+                  <tr>
+                    <td className="empty-table-cell" colSpan={tableColumns.length}>
+                      ไม่พบข้อมูลตาม filter ที่เลือก
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
