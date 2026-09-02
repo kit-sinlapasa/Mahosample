@@ -64,16 +64,27 @@ def create_public_sample_request(
     sample_request_in: SampleRequestCreate,
 ) -> SampleRequest:
     address_fingerprint = build_address_fingerprint(sample_request_in)
-    duplicate = db.scalar(
-        select(SampleRequest).where(
-            (SampleRequest.phone == sample_request_in.phone)
-            | (SampleRequest.address_fingerprint == address_fingerprint),
-        ),
+    duplicate_phone = db.scalar(
+        select(SampleRequest).where(SampleRequest.phone == sample_request_in.phone),
     )
-    if duplicate is not None:
+    duplicate_address = db.scalar(
+        select(SampleRequest).where(SampleRequest.address_fingerprint == address_fingerprint),
+    )
+
+    if duplicate_phone is not None and duplicate_address is not None:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="This person, phone number, or address has already registered.",
+            detail="duplicate_phone_and_address",
+        )
+    if duplicate_phone is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="duplicate_phone",
+        )
+    if duplicate_address is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="duplicate_address",
         )
 
     sample_request = SampleRequest(
@@ -108,7 +119,7 @@ def create_public_sample_request(
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="This registration already exists.",
+            detail="duplicate_registration",
         ) from None
     db.refresh(sample_request)
     return sample_request

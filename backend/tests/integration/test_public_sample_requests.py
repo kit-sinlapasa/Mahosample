@@ -90,10 +90,44 @@ def test_public_sample_request_rejects_duplicate_phone(client: TestClient) -> No
 
     duplicate_payload = valid_sample_request_payload()
     duplicate_payload["email"] = "another@example.com"
+    duplicate_payload["address_line1"] = "88/8 อาคารทดสอบ"
+    duplicate_payload["address_line2"] = "ซอยตัวอย่าง 2"
 
     response = client.post("/api/public/sample-requests", json=duplicate_payload)
 
     assert response.status_code == 409
+    assert response.json()["detail"] == "duplicate_phone"
+
+
+def test_public_sample_request_reports_duplicate_address(client: TestClient) -> None:
+    payload = valid_sample_request_payload()
+    first_response = client.post("/api/public/sample-requests", json=payload)
+    assert first_response.status_code == 201
+
+    duplicate_payload = valid_sample_request_payload()
+    duplicate_payload["phone"] = "0812345699"
+    duplicate_payload["email"] = "different@example.com"
+
+    response = client.post("/api/public/sample-requests", json=duplicate_payload)
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == "duplicate_address"
+
+
+def test_public_sample_request_reports_duplicate_phone_and_address(
+    client: TestClient,
+) -> None:
+    payload = valid_sample_request_payload()
+    first_response = client.post("/api/public/sample-requests", json=payload)
+    assert first_response.status_code == 201
+
+    duplicate_payload = valid_sample_request_payload()
+    duplicate_payload["email"] = "another@example.com"
+
+    response = client.post("/api/public/sample-requests", json=duplicate_payload)
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == "duplicate_phone_and_address"
 
 
 def test_public_tracking_does_not_expose_personal_data(client: TestClient) -> None:
