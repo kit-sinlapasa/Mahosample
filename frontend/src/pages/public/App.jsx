@@ -48,12 +48,6 @@ const experiences = [
   ["received_sample", "เคยได้รับตัวอย่าง"],
 ];
 
-const contactChannels = [
-  ["phone", "โทรศัพท์"],
-  ["messenger", "Facebook Messenger"],
-  ["line", "LINE"],
-];
-
 function TextField({ label, name, value, onChange, required = false, type = "text" }) {
   return (
     <label className="field">
@@ -233,13 +227,6 @@ export default function App() {
                 options={experiences}
                 value={form.maho_experience}
               />
-              <SelectField
-                label="ช่องทางติดต่อ"
-                name="preferred_contact_channel"
-                onChange={updateField}
-                options={contactChannels}
-                value={form.preferred_contact_channel}
-              />
             </div>
           </section>
 
@@ -331,6 +318,10 @@ export default function App() {
         <aside className="space-y-6">
           <section className="surface">
             <h2>ตรวจสอบสถานะ</h2>
+            <p className="mt-2 text-sm text-zinc-600">
+              ใช้เลขรายการที่ได้หลังส่งฟอร์ม เพื่อตรวจสถานะคำขอและเปิดลิงก์ Thailand Post
+              เมื่อมีเลข tracking แล้ว
+            </p>
             <form className="mt-4 space-y-3" onSubmit={checkTracking}>
               <label className="field">
                 <span>เลขรายการ</span>
