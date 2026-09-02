@@ -54,7 +54,12 @@
   .public-page .field,
   .public-page .btn,
   .public-page .brand-chip,
-  .public-page .eyebrow {
+  .public-page .eyebrow,
+  .public-page .success-dialog h2,
+  .public-page .success-dialog-request,
+  .public-page .success-dialog-request strong,
+  .public-page .alert,
+  .public-page .link {
     @apply font-normal;
   }
 
@@ -241,6 +246,7 @@
   .staff-page .field,
   .staff-page .metric p,
   .staff-page .metric strong,
+  .staff-page .status-current,
   .staff-page .data-table th,
   .staff-page .data-table td,
   .staff-shell h1,
@@ -268,6 +274,14 @@
 
   .file-input {
     @apply h-auto cursor-pointer py-2;
+  }
+
+  .status-cell {
+    @apply flex min-w-40 flex-col gap-1;
+  }
+
+  .status-current {
+    @apply inline-flex min-h-8 items-center rounded-md border border-zinc-200 bg-zinc-50 px-3 text-sm text-zinc-700;
   }
 
   .data-table {

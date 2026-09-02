@@ -12,6 +12,22 @@ const statusOptions = [
   "cancelled",
 ];
 const shippingOptions = ["not_ready", "ready_to_ship", "shipped", "delivered", "failed"];
+const requestStatusLabels = {
+  pending: "รอตรวจสอบ",
+  approved: "อนุมัติแล้ว",
+  rejected: "ไม่ผ่านเงื่อนไข",
+  packed: "แพ็กแล้ว",
+  shipped: "จัดส่งแล้ว",
+  completed: "เสร็จสิ้น",
+  cancelled: "ยกเลิก",
+};
+const shippingStatusLabels = {
+  not_ready: "ยังไม่พร้อมส่ง",
+  ready_to_ship: "พร้อมส่ง",
+  shipped: "จัดส่งแล้ว",
+  delivered: "นำจ่ายสำเร็จ",
+  failed: "จัดส่งไม่สำเร็จ",
+};
 
 function getDownloadFilename(response, fallback) {
   const disposition = response.headers["content-disposition"];
@@ -266,18 +282,20 @@ function StaffRow({ request, onSave, onShipping }) {
       <td>{request.phone}</td>
       <td>{request.province}</td>
       <td>
-        <select onChange={(event) => setRequestStatus(event.target.value)} value={requestStatus}>
-          {statusOptions.map((status) => (
-            <option key={status}>{status}</option>
-          ))}
-        </select>
+        <StatusSelect
+          labels={requestStatusLabels}
+          onChange={setRequestStatus}
+          options={statusOptions}
+          value={requestStatus}
+        />
       </td>
       <td>
-        <select onChange={(event) => setShippingStatus(event.target.value)} value={shippingStatus}>
-          {shippingOptions.map((status) => (
-            <option key={status}>{status}</option>
-          ))}
-        </select>
+        <StatusSelect
+          labels={shippingStatusLabels}
+          onChange={setShippingStatus}
+          options={shippingOptions}
+          value={shippingStatus}
+        />
       </td>
       <td>
         <input
@@ -295,17 +313,32 @@ function StaffRow({ request, onSave, onShipping }) {
             onClick={() => onSave(request.request_no, requestStatus, notes)}
             type="button"
           >
-            Save
+            บันทึกคำขอ
           </button>
           <button
             className="btn btn-primary"
             onClick={() => onShipping(request.request_no, shippingStatus, trackingNumber)}
             type="button"
           >
-            Ship
+            อัปเดตขนส่ง
           </button>
         </div>
       </td>
     </tr>
+  );
+}
+
+function StatusSelect({ labels, onChange, options, value }) {
+  return (
+    <div className="status-cell">
+      <span className="status-current">{labels[value] || value || "-"}</span>
+      <select onChange={(event) => onChange(event.target.value)} value={value}>
+        {options.map((status) => (
+          <option key={status} value={status}>
+            {labels[status] || status}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }
