@@ -3,6 +3,67 @@ import { Link } from "react-router-dom";
 
 import { apiClient } from "../../api/client";
 
+const shippingStatusLabels = {
+  not_ready: "ยังไม่พร้อมจัดส่ง",
+  ready_to_ship: "เตรียมจัดส่ง",
+  shipped: "จัดส่งแล้ว",
+  delivered: "นำจ่ายสำเร็จ",
+  failed: "จัดส่งไม่สำเร็จ",
+};
+
+const requestStatusLabels = {
+  pending: "รอตรวจสอบ",
+  approved: "อนุมัติแล้ว",
+  rejected: "ไม่ผ่านเงื่อนไข",
+  packed: "แพ็กสินค้าแล้ว",
+  shipped: "จัดส่งแล้ว",
+  completed: "เสร็จสิ้น",
+  cancelled: "ยกเลิก",
+};
+
+const trackingSteps = [
+  ["accepted", "รับเข้าระบบ"],
+  ["in_transit", "ระหว่างขนส่ง"],
+  ["out_for_delivery", "ออกไปนำจ่าย"],
+  ["delivered", "นำจ่ายสำเร็จ"],
+];
+
+const shippingProgress = {
+  not_ready: 0,
+  ready_to_ship: 1,
+  shipped: 2,
+  delivered: 4,
+  failed: 2,
+};
+
+function buildLocalEvents(tracking) {
+  if (!tracking?.tracking_number) {
+    return [];
+  }
+
+  const events = [
+    {
+      title: "ระบบบันทึกเลข tracking แล้ว",
+      detail: `เลข tracking ${tracking.tracking_number} พร้อมสำหรับตรวจสอบสถานะ`,
+    },
+  ];
+
+  if (["shipped", "delivered", "failed"].includes(tracking.shipping_status)) {
+    events.unshift({
+      title:
+        tracking.shipping_status === "delivered"
+          ? "นำจ่ายสำเร็จ"
+          : "พัสดุอยู่ระหว่างกระบวนการจัดส่ง",
+      detail:
+        tracking.shipping_status === "delivered"
+          ? "ระบบบันทึกสถานะว่าส่งถึงผู้รับแล้ว"
+          : "ระบบบันทึกสถานะจัดส่งแล้ว รอรายละเอียดเพิ่มเติมจากไปรษณีย์ไทย",
+    });
+  }
+
+  return events;
+}
+
 export default function TrackingPage() {
   const [trackingNumber, setTrackingNumber] = useState("");
   const [tracking, setTracking] = useState(null);
@@ -22,8 +83,11 @@ export default function TrackingPage() {
     }
   }
 
+  const progressCount = tracking ? shippingProgress[tracking.shipping_status] || 0 : 0;
+  const localEvents = buildLocalEvents(tracking);
+
   return (
-    <main className="min-h-screen bg-stone-50 text-zinc-950">
+    <main className="public-page min-h-screen text-zinc-950">
       <header className="border-b border-zinc-200 bg-white">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
           <div>
@@ -61,10 +125,74 @@ export default function TrackingPage() {
 
           {trackingError && <p className="alert error mt-4">{trackingError}</p>}
           {tracking && (
-            <div className="mt-5 rounded-md border border-zinc-200 bg-zinc-50 p-4 text-sm">
-              <p className="font-semibold">เลข tracking: {tracking.tracking_number}</p>
-              <p className="mt-2">สถานะคำขอ: {tracking.request_status}</p>
-              <p>สถานะขนส่งในระบบ: {tracking.shipping_status}</p>
+            <div className="tracking-result mt-5">
+              <div className="tracking-summary">
+                <div>
+                  <p className="eyebrow">Thailand Post Tracking</p>
+                  <h2>{tracking.tracking_number}</h2>
+                  <p className="mt-2 text-sm text-zinc-600">
+                    เลขรายการภายใน: {tracking.request_no}
+                  </p>
+                </div>
+                <div className="tracking-status-pill">
+                  {shippingStatusLabels[tracking.shipping_status] || tracking.shipping_status}
+                </div>
+              </div>
+
+              <dl className="tracking-meta">
+                <div>
+                  <dt>สถานะคำขอ</dt>
+                  <dd>{requestStatusLabels[tracking.request_status] || tracking.request_status}</dd>
+                </div>
+                <div>
+                  <dt>สถานะขนส่งในระบบ</dt>
+                  <dd>{shippingStatusLabels[tracking.shipping_status] || tracking.shipping_status}</dd>
+                </div>
+              </dl>
+
+              <ol className="tracking-steps">
+                {trackingSteps.map(([stepKey, label], index) => {
+                  const completed = index < progressCount;
+                  const current = index === Math.max(progressCount - 1, 0);
+                  return (
+                    <li
+                      className={[
+                        "tracking-step",
+                        completed ? "is-complete" : "",
+                        current && completed ? "is-current" : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      key={stepKey}
+                    >
+                      <span>{index + 1}</span>
+                      <p>{label}</p>
+                    </li>
+                  );
+                })}
+              </ol>
+
+              <section className="tracking-timeline">
+                <h2>รายละเอียดการจัดส่ง</h2>
+                {localEvents.length > 0 ? (
+                  <ol>
+                    {localEvents.map((event) => (
+                      <li key={`${event.title}-${event.detail}`}>
+                        <strong>{event.title}</strong>
+                        <p>{event.detail}</p>
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <p>ยังไม่มีเลข tracking ในระบบ</p>
+                )}
+                <p className="mt-4 text-xs leading-5 text-zinc-500">
+                  รายละเอียดรายจุด เช่น ศูนย์คัดแยก ปลายทาง เวลาโทรติดต่อ
+                  และผลการนำจ่าย จะแสดงในส่วนนี้หลังเชื่อม Thailand Post API
+                  หรือมีการ import ข้อมูล timeline เข้าระบบ
+                </p>
+              </section>
+
               {tracking.tracking_url && (
                 <a className="link" href={tracking.tracking_url} rel="noreferrer" target="_blank">
                   เปิดหน้า Thailand Post

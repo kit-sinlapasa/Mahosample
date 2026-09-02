@@ -90,6 +90,86 @@
     @apply mt-4 text-sm leading-6 text-zinc-700;
   }
 
+  .tracking-result {
+    @apply rounded-lg border border-amber-100 bg-white p-5 shadow-sm;
+  }
+
+  .tracking-summary {
+    @apply flex flex-col gap-4 border-b border-amber-100 pb-4 sm:flex-row sm:items-start sm:justify-between;
+  }
+
+  .tracking-summary h2 {
+    @apply mt-1 text-2xl font-bold text-[#111947];
+  }
+
+  .tracking-status-pill {
+    @apply inline-flex w-fit rounded-md bg-[#25347c] px-3 py-1 text-sm font-semibold text-white;
+  }
+
+  .tracking-meta {
+    @apply mt-4 grid gap-3 sm:grid-cols-2;
+  }
+
+  .tracking-meta div {
+    @apply rounded-md border border-[#d9ad5c]/30 bg-[#fffaf4] p-3;
+  }
+
+  .tracking-meta dt {
+    @apply text-xs font-semibold uppercase text-zinc-500;
+  }
+
+  .tracking-meta dd {
+    @apply mt-1 font-semibold text-[#111947];
+  }
+
+  .tracking-steps {
+    @apply mt-5 grid gap-3 sm:grid-cols-4;
+  }
+
+  .tracking-step {
+    @apply rounded-md border border-zinc-200 bg-zinc-50 p-3 text-center text-sm text-zinc-500;
+  }
+
+  .tracking-step span {
+    @apply mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-zinc-200 text-sm font-bold text-zinc-500;
+  }
+
+  .tracking-step p {
+    @apply mt-2 font-semibold;
+  }
+
+  .tracking-step.is-complete {
+    @apply border-[#d9ad5c]/50 bg-[#fff4df] text-[#111947];
+  }
+
+  .tracking-step.is-complete span {
+    @apply bg-[#25347c] text-white;
+  }
+
+  .tracking-step.is-current {
+    @apply ring-2 ring-[#d9ad5c]/40;
+  }
+
+  .tracking-timeline {
+    @apply mt-5 rounded-md border border-zinc-200 bg-zinc-50 p-4;
+  }
+
+  .tracking-timeline ol {
+    @apply mt-3 space-y-3;
+  }
+
+  .tracking-timeline li {
+    @apply border-l-2 border-[#d9ad5c] pl-3 text-sm;
+  }
+
+  .tracking-timeline strong {
+    @apply text-[#111947];
+  }
+
+  .tracking-timeline p {
+    @apply mt-1 leading-6 text-zinc-600;
+  }
+
   .field {
     @apply flex flex-col gap-1.5 text-sm font-medium text-zinc-700;
   }
