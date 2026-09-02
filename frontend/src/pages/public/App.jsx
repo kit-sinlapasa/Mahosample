@@ -316,14 +316,6 @@ export default function App() {
           </section>
 
           {formError && <p className="alert error">{formError}</p>}
-          {createdRequest && (
-            <p className="alert success">
-              ลงทะเบียนสำเร็จ เลขรายการภายในคือ {createdRequest.request_no}
-              เจ้าหน้าที่จะส่งเลข tracking ให้ทาง LINE ID หรือ Facebook Messenger
-              หลังจัดส่งแล้ว
-            </p>
-          )}
-
           <button className="btn btn-primary w-full sm:w-auto" disabled={!canSubmit} type="submit">
             {submitting ? "กำลังส่ง..." : "ส่งแบบฟอร์ม"}
           </button>
@@ -348,6 +340,34 @@ export default function App() {
           </section>
         </aside>
       </div>
+
+      {createdRequest && (
+        <div className="success-dialog-backdrop" role="presentation">
+          <section
+            aria-labelledby="registration-success-title"
+            aria-modal="true"
+            className="success-dialog"
+            role="dialog"
+          >
+            <p className="eyebrow">ส่งแบบฟอร์มเรียบร้อย</p>
+            <h2 id="registration-success-title">ลงทะเบียนสำเร็จ</h2>
+            <p className="success-dialog-request">
+              เลขรายการภายในคือ <strong>{createdRequest.request_no}</strong>
+            </p>
+            <p className="success-dialog-copy">
+              เจ้าหน้าที่จะส่งเลข tracking ให้ทาง LINE ID หรือ Facebook Messenger
+              หลังจัดส่งแล้ว
+            </p>
+            <button
+              className="btn btn-primary mt-5 w-full"
+              onClick={() => setCreatedRequest(null)}
+              type="button"
+            >
+              ตกลง
+            </button>
+          </section>
+        </div>
+      )}
     </main>
   );
 }
