@@ -1,0 +1,15 @@
+{
+    auto_https off
+}
+
+:8080 {
+    encode gzip zstd
+
+    handle /api/* {
+        reverse_proxy mahosample-api:8000
+    }
+
+    handle {
+        reverse_proxy mahosample-frontend:80
+    }
+}
