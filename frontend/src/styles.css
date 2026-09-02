@@ -1,10 +1,23 @@
+@import url("https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  html {
+    font-family: "FC Vision Rounded", "FC Vision Rounded TH", "Mitr", "Noto Sans Thai", "Tahoma", sans-serif;
+  }
+
   body {
     @apply bg-stone-50 antialiased;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
   }
 
   h2 {
