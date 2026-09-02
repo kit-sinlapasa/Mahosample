@@ -48,3 +48,20 @@ def read_tracking(
         )
     return sample_request_service.get_tracking_response(sample_request)
 
+
+@router.get("/tracking-number/{tracking_number}", response_model=SampleRequestTrackingRead)
+def read_tracking_by_tracking_number(
+    tracking_number: str,
+    db: Annotated[Session, Depends(get_db)],
+) -> SampleRequestTrackingRead:
+    sample_request = sample_request_service.get_sample_request_by_tracking_number(
+        db,
+        tracking_number,
+    )
+    if sample_request is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Tracking number not found.",
+        )
+    return sample_request_service.get_tracking_response(sample_request)
+

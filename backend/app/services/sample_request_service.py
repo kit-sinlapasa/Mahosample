@@ -118,6 +118,15 @@ def get_sample_request_by_request_no(db: Session, request_no: str) -> SampleRequ
     return db.scalar(select(SampleRequest).where(SampleRequest.request_no == request_no))
 
 
+def get_sample_request_by_tracking_number(
+    db: Session,
+    tracking_number: str,
+) -> SampleRequest | None:
+    return db.scalar(
+        select(SampleRequest).where(SampleRequest.tracking_number == tracking_number),
+    )
+
+
 def delete_sample_request(db: Session, sample_request: SampleRequest) -> None:
     db.delete(sample_request)
     db.commit()
