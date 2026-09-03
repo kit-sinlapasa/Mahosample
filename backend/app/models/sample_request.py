@@ -30,6 +30,16 @@ class MahoExperience(str, enum.Enum):
     RECEIVED_SAMPLE = "received_sample"
 
 
+class ReferralSource(str, enum.Enum):
+    FACEBOOK = "facebook"
+    WEBSITE = "website"
+    GOOGLE_SEARCH = "google_search"
+    IG = "ig"
+    TIKTOK = "tiktok"
+    FRIEND = "friend"
+    BOOTH_EVENT = "booth_event"
+
+
 class PreferredContactChannel(str, enum.Enum):
     PHONE = "phone"
     MESSENGER = "messenger"
@@ -68,6 +78,7 @@ class SampleRequest(Base):
     health_interest: Mapped[str] = mapped_column(String(50), nullable=False)
     health_interest_other: Mapped[str | None] = mapped_column(String(255), nullable=True)
     maho_experience: Mapped[str] = mapped_column(String(30), nullable=False)
+    referral_source: Mapped[str | None] = mapped_column(String(30), nullable=True)
     recipient_name: Mapped[str] = mapped_column(String(255), nullable=False)
     address_line1: Mapped[str] = mapped_column(String(255), nullable=False)
     address_line2: Mapped[str | None] = mapped_column(String(255), nullable=True)

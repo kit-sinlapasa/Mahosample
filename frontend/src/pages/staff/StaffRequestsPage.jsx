@@ -23,6 +23,15 @@ const healthInterestOptions = [
   "other",
 ];
 const mahoExperienceOptions = ["never", "used", "received_sample"];
+const referralSourceOptions = [
+  "facebook",
+  "website",
+  "google_search",
+  "ig",
+  "tiktok",
+  "friend",
+  "booth_event",
+];
 const contactChannelOptions = ["phone", "line", "messenger"];
 const consentOptions = [true, false];
 const displayLimit = 100;
@@ -57,6 +66,13 @@ const valueLabels = {
   never: "ไม่เคย",
   used: "เคยรับประทาน",
   received_sample: "เคยได้รับตัวอย่าง",
+  facebook: "Facebook",
+  website: "Website",
+  google_search: "Google Search",
+  ig: "IG",
+  tiktok: "TikTok",
+  friend: "เพื่อนแนะนำ",
+  booth_event: "กิจกรรมออกบูธ",
   phone: "โทรศัพท์",
   line: "LINE",
   messenger: "Facebook Messenger",
@@ -77,6 +93,7 @@ const tableColumns = [
   { key: "health_interest", label: "สุขภาพ", type: "select", options: healthInterestOptions },
   { key: "health_interest_other", label: "สุขภาพอื่น ๆ" },
   { key: "maho_experience", label: "ประสบการณ์", type: "select", options: mahoExperienceOptions },
+  { key: "referral_source", label: "รู้จักจาก", type: "select", options: referralSourceOptions },
   { key: "recipient_name", label: "ผู้รับ" },
   { key: "address_line1", label: "ที่อยู่ 1" },
   { key: "address_line2", label: "ที่อยู่ 2" },
@@ -112,6 +129,7 @@ const detailFields = [
   ["ความสนใจสุขภาพ", "health_interest"],
   ["อื่น ๆ", "health_interest_other"],
   ["ประสบการณ์กับ มะโฮ", "maho_experience"],
+  ["ท่านรู้จักเราจาก", "referral_source"],
   ["ผู้รับ", "recipient_name"],
   ["ที่อยู่ 1", "address_line1"],
   ["ที่อยู่ 2", "address_line2"],

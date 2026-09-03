@@ -12,6 +12,7 @@ def valid_sample_request_payload() -> dict[str, object]:
         "health_interest": "immune_support",
         "health_interest_other": None,
         "maho_experience": "never",
+        "referral_source": "facebook",
         "recipient_name": "สมชาย ใจดี",
         "address_line1": "99/9 หมู่บ้านสุขใจ",
         "address_line2": "ถนนตัวอย่าง",
@@ -33,6 +34,25 @@ def test_public_user_can_create_sample_request(client: TestClient) -> None:
     assert body["request_no"].startswith("MS")
     assert body["request_status"] == "pending"
     assert body["shipping_status"] == "not_ready"
+
+
+def test_public_sample_request_stores_referral_source(client: TestClient, staff_user) -> None:
+    payload = valid_sample_request_payload()
+    payload["referral_source"] = "google_search"
+    create_response = client.post("/api/public/sample-requests", json=payload)
+    assert create_response.status_code == 201
+    request_no = create_response.json()["request_no"]
+
+    from tests.conftest import login
+
+    token = login(client, staff_user.email, "staff-password")
+    admin_response = client.get(
+        f"/api/admin/sample-requests/{request_no}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert admin_response.status_code == 200
+    assert admin_response.json()["referral_source"] == "google_search"
 
 
 def test_public_user_can_create_sample_request_with_line_only(client: TestClient) -> None:

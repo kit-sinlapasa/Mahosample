@@ -98,6 +98,9 @@ def create_public_sample_request(
         health_interest=sample_request_in.health_interest.value,
         health_interest_other=sample_request_in.health_interest_other,
         maho_experience=sample_request_in.maho_experience.value,
+        referral_source=sample_request_in.referral_source.value
+        if sample_request_in.referral_source
+        else None,
         recipient_name=sample_request_in.recipient_name,
         address_line1=sample_request_in.address_line1,
         address_line2=sample_request_in.address_line2,

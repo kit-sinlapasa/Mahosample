@@ -14,6 +14,7 @@ const initialForm = {
   health_interest: "immune_support",
   health_interest_other: "",
   maho_experience: "never",
+  referral_source: "facebook",
   recipient_name: "",
   address_line1: "",
   address_line2: "",
@@ -47,6 +48,16 @@ const experiences = [
   ["never", "ไม่เคย"],
   ["used", "เคยรับประทาน"],
   ["received_sample", "เคยได้รับตัวอย่าง"],
+];
+
+const referralSources = [
+  ["facebook", "Facebook"],
+  ["website", "Website"],
+  ["google_search", "Google Search"],
+  ["ig", "IG"],
+  ["tiktok", "TikTok"],
+  ["friend", "เพื่อนแนะนำ"],
+  ["booth_event", "กิจกรรมออกบูธ"],
 ];
 
 const thaiAddressFinder = new ThaiAddressFinder({ maxSearchResult: 200 });
@@ -508,6 +519,13 @@ export default function App() {
                 onChange={updateField}
                 options={ageRanges}
                 value={form.age_range}
+              />
+              <SelectField
+                label="ท่านรู้จักเราจาก"
+                name="referral_source"
+                onChange={updateField}
+                options={referralSources}
+                value={form.referral_source}
               />
             </div>
           </section>
