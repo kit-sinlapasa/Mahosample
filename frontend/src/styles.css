@@ -259,6 +259,12 @@
   .staff-page .field,
   .staff-page .metric p,
   .staff-page .metric strong,
+  .staff-page .metric span,
+  .staff-page .chart-card p,
+  .staff-page .insight-item p,
+  .staff-page .insight-item strong,
+  .staff-page .insight-item span,
+  .staff-page .dashboard-date-controls label,
   .staff-page .detail-list dt,
   .staff-page .detail-list dd,
   .staff-page .status-current,
@@ -286,6 +292,74 @@
 
   .metric strong {
     @apply mt-1 block text-3xl font-bold text-zinc-950;
+  }
+
+  .metric span {
+    @apply mt-2 block text-xs leading-5 text-zinc-500;
+  }
+
+  .metric-blue {
+    @apply border-l-4 border-l-[#25347c];
+  }
+
+  .metric-amber {
+    @apply border-l-4 border-l-[#d68019];
+  }
+
+  .metric-rose {
+    @apply border-l-4 border-l-rose-600;
+  }
+
+  .metric-green {
+    @apply border-l-4 border-l-[#4f7f33];
+  }
+
+  .dashboard-date-controls {
+    @apply grid gap-3 sm:grid-cols-2 lg:min-w-[42rem] lg:grid-cols-[10rem_10rem_1fr] lg:items-end;
+  }
+
+  .dashboard-date-controls label {
+    @apply flex flex-col gap-1.5 text-xs text-zinc-600;
+  }
+
+  .quick-range-group {
+    @apply grid grid-cols-2 gap-2 sm:grid-cols-4;
+  }
+
+  .chart-card {
+    @apply min-h-[22rem];
+  }
+
+  .chart-card > div:first-child p {
+    @apply mt-1 text-sm leading-6 text-zinc-600;
+  }
+
+  .chart-frame {
+    @apply mt-4 h-[260px] w-full;
+  }
+
+  .insight-list {
+    @apply mt-4 grid gap-3 sm:grid-cols-2;
+  }
+
+  .insight-item {
+    @apply rounded-md border border-zinc-200 bg-zinc-50 p-3;
+  }
+
+  .insight-item p {
+    @apply text-xs text-zinc-500;
+  }
+
+  .insight-item strong {
+    @apply mt-1 block text-lg text-zinc-950;
+  }
+
+  .insight-item span {
+    @apply mt-1 block text-xs leading-5 text-zinc-600;
+  }
+
+  .compact-action-table {
+    @apply min-w-[48rem];
   }
 
   .file-input {
