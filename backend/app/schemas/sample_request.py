@@ -7,6 +7,7 @@ from app.models.sample_request import (
     HealthInterest,
     MahoExperience,
     PreferredContactChannel,
+    ReferralSource,
     RequestStatus,
     ShippingStatus,
 )
@@ -22,6 +23,7 @@ class SampleRequestCreate(BaseModel):
     health_interest: HealthInterest
     health_interest_other: str | None = Field(default=None, max_length=255)
     maho_experience: MahoExperience
+    referral_source: ReferralSource | None = None
     recipient_name: str = Field(min_length=1, max_length=255)
     address_line1: str = Field(min_length=1, max_length=255)
     address_line2: str | None = Field(default=None, max_length=255)
@@ -90,6 +92,7 @@ class SampleRequestAdminRead(BaseModel):
     health_interest: HealthInterest
     health_interest_other: str | None
     maho_experience: MahoExperience
+    referral_source: ReferralSource | None
     recipient_name: str
     address_line1: str
     address_line2: str | None
