@@ -79,6 +79,18 @@
     @apply rounded-md border border-[#d9ad5c]/40 bg-[#fff4df] px-3 py-1 text-[#111947];
   }
 
+  .address-field {
+    @apply relative;
+  }
+
+  .address-suggestions {
+    @apply absolute left-0 right-0 top-full z-30 mt-1 max-h-64 overflow-y-auto rounded-md border border-amber-200 bg-white py-1 shadow-lg;
+  }
+
+  .address-suggestions button {
+    @apply block h-auto min-h-10 w-full px-3 py-2 text-left text-sm font-normal leading-6 text-zinc-800 hover:bg-[#fff4df] hover:text-[#111947];
+  }
+
   .success-dialog-backdrop {
     @apply fixed inset-0 z-50 flex items-center justify-center bg-[#111947]/45 px-4 py-6 backdrop-blur-sm;
   }

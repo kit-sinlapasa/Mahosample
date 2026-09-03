@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { ThaiAddressFinder } from "thai-address-autocomplete-react";
 
 import { apiClient } from "../../api/client";
 
@@ -48,6 +49,8 @@ const experiences = [
   ["received_sample", "เคยได้รับตัวอย่าง"],
 ];
 
+const thaiAddressFinder = new ThaiAddressFinder({ maxSearchResult: 200 });
+
 function TextField({
   label,
   name,
@@ -72,6 +75,50 @@ function TextField({
   );
 }
 
+function AddressAutocompleteField({
+  label,
+  name,
+  value,
+  onChange,
+  onSelect,
+  inputMode,
+  options,
+  placeholder,
+}) {
+  return (
+    <label className="field address-field">
+      <span>{label}</span>
+      <input
+        autoComplete="off"
+        inputMode={inputMode}
+        name={name}
+        onBlur={() => onChange(name, value, { closeAfterBlur: true })}
+        onChange={(event) => onChange(name, event.target.value)}
+        onFocus={() => onChange(name, value)}
+        placeholder={placeholder}
+        value={value}
+      />
+      {options.length > 0 && (
+        <div className="address-suggestions" role="listbox">
+          {options.map((address) => (
+            <button
+              key={`${address.district}-${address.amphoe}-${address.province}-${address.zipcode}`}
+              onMouseDown={(event) => {
+                event.preventDefault();
+                onSelect(address);
+              }}
+              role="option"
+              type="button"
+            >
+              {address.district}, {address.amphoe}, {address.province}, {address.zipcode}
+            </button>
+          ))}
+        </div>
+      )}
+    </label>
+  );
+}
+
 function digitsOnly(value) {
   return value.replace(/\D/g, "");
 }
@@ -80,6 +127,99 @@ function hasContactChannel(form) {
   return Boolean(
     form.email.trim() || form.line_id.trim() || form.messenger_id.trim(),
   );
+}
+
+function normalizeAddressValue(value) {
+  return value.trim().toLowerCase();
+}
+
+function isSameAddressValue(left, right) {
+  return normalizeAddressValue(left) === normalizeAddressValue(right);
+}
+
+function isAddressFilterMatch(inputValue, addressValue) {
+  const normalizedInput = normalizeAddressValue(inputValue);
+  const normalizedAddress = normalizeAddressValue(addressValue);
+  return (
+    normalizedAddress.includes(normalizedInput)
+    || normalizedInput.includes(normalizedAddress)
+  );
+}
+
+function getAddressFilter(form, activeField) {
+  return (address) => {
+    if (!address) {
+      return false;
+    }
+
+    const checks = {
+      subdistrict: address.district,
+      district: address.amphoe,
+      province: address.province,
+      postal_code: address.zipcode,
+    };
+
+    return Object.entries(checks).every(([fieldName, addressValue]) => {
+      if (fieldName === activeField || !form[fieldName].trim()) {
+        return true;
+      }
+      return isAddressFilterMatch(form[fieldName], addressValue);
+    });
+  };
+}
+
+function getUniqueAddresses(addresses) {
+  const seen = new Set();
+  return addresses.filter((address) => {
+    const key = `${address.district}|${address.amphoe}|${address.province}|${address.zipcode}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+}
+
+function getAddressSuggestions(fieldName, query, form) {
+  const searchValue = query.trim();
+  const filter = getAddressFilter(form, fieldName);
+  let results = [];
+
+  if (searchValue) {
+    if (fieldName === "postal_code") {
+      results = thaiAddressFinder.SearchAddressByZipcode(digitsOnly(searchValue), filter);
+    } else if (fieldName === "province") {
+      results = thaiAddressFinder.SearchAddressByProvince(searchValue, filter);
+    } else if (fieldName === "district") {
+      results = thaiAddressFinder.SearchAddressByAmphoe(searchValue, filter);
+    } else if (fieldName === "subdistrict") {
+      results = thaiAddressFinder.SearchAddressByDistrict(searchValue, filter);
+    }
+  } else if (form.district.trim()) {
+    results = thaiAddressFinder.SearchAddressByAmphoe(form.district, filter);
+  } else if (form.province.trim()) {
+    results = thaiAddressFinder.SearchAddressByProvince(form.province, filter);
+  } else if (digitsOnly(form.postal_code).length >= 2) {
+    results = thaiAddressFinder.SearchAddressByZipcode(form.postal_code, filter);
+  }
+
+  return getUniqueAddresses(results).slice(0, 12);
+}
+
+function hasKnownThaiAddress(form) {
+  const postalCode = digitsOnly(form.postal_code);
+  if (postalCode.length !== 5) {
+    return false;
+  }
+
+  return thaiAddressFinder
+    .SearchAddressByZipcode(postalCode)
+    .some((address) => (
+      isSameAddressValue(form.subdistrict, address.district)
+      && isSameAddressValue(form.district, address.amphoe)
+      && isSameAddressValue(form.province, address.province)
+      && form.postal_code.trim() === address.zipcode
+    ));
 }
 
 function getClientValidationErrors(form) {
@@ -111,6 +251,15 @@ function getClientValidationErrors(form) {
   }
   if (digitsOnly(form.postal_code).length < 5) {
     errors.push("กรุณากรอกรหัสไปรษณีย์ให้ครบ 5 หลัก");
+  }
+  if (
+    form.subdistrict.trim()
+    && form.district.trim()
+    && form.province.trim()
+    && digitsOnly(form.postal_code).length === 5
+    && !hasKnownThaiAddress(form)
+  ) {
+    errors.push("กรุณาเลือกที่อยู่จากรายการแนะนำ เพื่อให้ตำบล/แขวง อำเภอ/เขต จังหวัด และรหัสไปรษณีย์ตรงกัน");
   }
   if (form.health_interest === "other" && !form.health_interest_other.trim()) {
     errors.push("กรุณาระบุข้อมูลเพิ่มเติม เมื่อเลือกความสนใจเป็น “อื่น ๆ”");
@@ -184,6 +333,11 @@ export default function App() {
   const [submitting, setSubmitting] = useState(false);
   const [createdRequest, setCreatedRequest] = useState(null);
   const [formError, setFormError] = useState("");
+  const [addressSuggestionState, setAddressSuggestionState] = useState({
+    field: "",
+    options: [],
+  });
+  const addressBlurTimerRef = useRef(null);
 
   const canSubmit = useMemo(
     () => form.pdpa_consent && !submitting,
@@ -197,6 +351,43 @@ export default function App() {
       [name]: type === "checkbox" ? checked : value,
       ...(name === "full_name" && !current.recipient_name ? { recipient_name: value } : {}),
     }));
+  }
+
+  function updateAddressField(name, value, options = {}) {
+    if (options.closeAfterBlur) {
+      addressBlurTimerRef.current = window.setTimeout(() => {
+        setAddressSuggestionState({ field: "", options: [] });
+      }, 120);
+      return;
+    }
+
+    if (addressBlurTimerRef.current) {
+      window.clearTimeout(addressBlurTimerRef.current);
+      addressBlurTimerRef.current = null;
+    }
+
+    setForm((current) => {
+      const nextForm = {
+        ...current,
+        [name]: name === "postal_code" ? digitsOnly(value).slice(0, 5) : value,
+      };
+      setAddressSuggestionState({
+        field: name,
+        options: getAddressSuggestions(name, nextForm[name], nextForm),
+      });
+      return nextForm;
+    });
+  }
+
+  function selectThaiAddress(address) {
+    setForm((current) => ({
+      ...current,
+      subdistrict: address.district,
+      district: address.amphoe,
+      province: address.province,
+      postal_code: address.zipcode,
+    }));
+    setAddressSuggestionState({ field: "", options: [] });
   }
 
   async function submitForm(event) {
@@ -370,36 +561,42 @@ export default function App() {
                 onChange={updateField}
                 value={form.address_line2}
               />
-              <TextField
-                label="ตำบล/แขวง"
-                name="subdistrict"
-                onChange={updateField}
-                required
-                value={form.subdistrict}
+              <AddressAutocompleteField
+                label="รหัสไปรษณีย์"
+                inputMode="numeric"
+                name="postal_code"
+                options={addressSuggestionState.field === "postal_code" ? addressSuggestionState.options : []}
+                placeholder="เช่น 10230"
+                onChange={updateAddressField}
+                onSelect={selectThaiAddress}
+                value={form.postal_code}
               />
-              <TextField
-                label="อำเภอ/เขต"
-                name="district"
-                onChange={updateField}
-                required
-                value={form.district}
-              />
-              <TextField
+              <AddressAutocompleteField
                 label="จังหวัด"
                 name="province"
-                onChange={updateField}
-                required
+                options={addressSuggestionState.field === "province" ? addressSuggestionState.options : []}
+                placeholder="พิมพ์จังหวัด เช่น กรุงเทพมหานคร"
+                onChange={updateAddressField}
+                onSelect={selectThaiAddress}
                 value={form.province}
               />
-              <TextField
-                label="รหัสไปรษณีย์"
-                name="postal_code"
-                onChange={updateField}
-                inputMode="numeric"
-                minLength={5}
-                placeholder="เช่น 10230"
-                required
-                value={form.postal_code}
+              <AddressAutocompleteField
+                label="อำเภอ/เขต"
+                name="district"
+                options={addressSuggestionState.field === "district" ? addressSuggestionState.options : []}
+                placeholder="พิมพ์อำเภอ/เขต เช่น ลาดพร้าว"
+                onChange={updateAddressField}
+                onSelect={selectThaiAddress}
+                value={form.district}
+              />
+              <AddressAutocompleteField
+                label="ตำบล/แขวง"
+                name="subdistrict"
+                options={addressSuggestionState.field === "subdistrict" ? addressSuggestionState.options : []}
+                placeholder="พิมพ์ตำบล/แขวง เช่น ลาดพร้าว"
+                onChange={updateAddressField}
+                onSelect={selectThaiAddress}
+                value={form.subdistrict}
               />
             </div>
           </section>
