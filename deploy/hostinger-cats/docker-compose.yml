@@ -1,0 +1,87 @@
+name: cats-mahosample
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: cats-mahosample-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - cats_mahosample_postgres_data:/var/lib/postgresql/data
+    networks:
+      - cats_mahosample_internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    image: ghcr.io/kit-sinlapasa/mahosample-api:latest
+    build:
+      context: https://github.com/kit-sinlapasa/Mahosample.git#main:backend
+    container_name: cats-mahosample-api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      API_CORS_ORIGINS: ${PUBLIC_APP_URL}
+      APP_ENV: production
+      JWT_SECRET: ${JWT_SECRET}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+      THAILAND_POST_TRACKING_BASE_URL: https://track.thailandpost.co.th/
+      THAILAND_POST_API_TOKEN: ${THAILAND_POST_API_TOKEN:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - cats_mahosample_internal
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=5).read()\""]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.cats-mahosample-api.rule: "Host(`${MAHOSAMPLE_HOST}`) && PathPrefix(`/api`)"
+      traefik.http.routers.cats-mahosample-api.entrypoints: "websecure"
+      traefik.http.routers.cats-mahosample-api.tls: "true"
+      traefik.http.routers.cats-mahosample-api.tls.certresolver: "letsencrypt"
+      traefik.http.routers.cats-mahosample-api.priority: "100"
+      traefik.http.services.cats-mahosample-api.loadbalancer.server.port: "8000"
+
+  frontend:
+    image: ghcr.io/kit-sinlapasa/mahosample-frontend:latest
+    build:
+      context: https://github.com/kit-sinlapasa/Mahosample.git#main:frontend
+      args:
+        VITE_API_BASE_URL: ""
+    container_name: cats-mahosample-frontend
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - cats_mahosample_internal
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.cats-mahosample.rule: "Host(`${MAHOSAMPLE_HOST}`)"
+      traefik.http.routers.cats-mahosample.entrypoints: "websecure"
+      traefik.http.routers.cats-mahosample.tls: "true"
+      traefik.http.routers.cats-mahosample.tls.certresolver: "letsencrypt"
+      traefik.http.services.cats-mahosample.loadbalancer.server.port: "80"
+
+networks:
+  cats_mahosample_internal:
+    name: cats_mahosample_internal
+
+volumes:
+  cats_mahosample_postgres_data:
+    name: cats_mahosample_postgres_data
