@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import { apiClient } from "../../api/client";
 
@@ -210,6 +210,7 @@ function hasTrackingNumber(request) {
 }
 
 export default function StaffRequestsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [token, setToken] = useState(() => localStorage.getItem("mahosample_token") || "");
   const [email, setEmail] = useState("admin@mahosample.com");
   const [password, setPassword] = useState("");
@@ -287,13 +288,26 @@ export default function StaffRequestsPage() {
     loadRequests();
   }, [token]);
 
-  function openDetail(request) {
+  useEffect(() => {
+    const requestNo = searchParams.get("request");
+    if (!requestNo || requests.length === 0) return;
+    const request = requests.find((item) => item.request_no === requestNo);
+    if (request) openDetail(request, false);
+  }, [requests, searchParams]);
+
+  function openDetail(request, updateUrl = true) {
     setSelectedRequest(request);
     setRequestStatus(request.request_status);
     setShippingStatus(request.shipping_status);
     setTrackingNumber(request.tracking_number || "");
     setNotes(request.notes || "");
     setMessage("");
+    if (updateUrl) setSearchParams({ request: request.request_no });
+  }
+
+  function closeDetail() {
+    setSelectedRequest(null);
+    setSearchParams({});
   }
 
   function toggleSort(key) {
@@ -530,14 +544,14 @@ export default function StaffRequestsPage() {
       </div>
 
       {selectedRequest && (
-        <div className="detail-drawer-backdrop" onClick={() => setSelectedRequest(null)}>
+        <div className="detail-drawer-backdrop" onClick={closeDetail}>
           <aside className="detail-drawer" onClick={(event) => event.stopPropagation()}>
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="eyebrow">รายละเอียดรายการ</p>
                 <h2>{selectedRequest.request_no}</h2>
               </div>
-              <button className="btn btn-secondary" onClick={() => setSelectedRequest(null)} type="button">
+              <button className="btn btn-secondary" onClick={closeDetail} type="button">
                 ปิด
               </button>
             </div>

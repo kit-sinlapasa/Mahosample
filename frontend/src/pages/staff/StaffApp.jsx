@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Bar,
   BarChart,
@@ -177,6 +177,7 @@ function averageDaysToShip(items) {
 }
 
 export default function StaffApp() {
+  const navigate = useNavigate();
   const [token, setToken] = useState(() => localStorage.getItem("mahosample_token") || "");
   const [email, setEmail] = useState("admin@mahosample.com");
   const [password, setPassword] = useState("");
@@ -622,7 +623,7 @@ export default function StaffApp() {
           <section className="surface">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2>งานที่ควรดำเนินการ</h2>
+                <h2>รายการที่ต้องดำเนินการ</h2>
                 <p className="mt-1 text-sm text-zinc-600">
                   แสดงรายการที่รอตรวจสอบ พร้อมส่ง หรือยังไม่มีเลข tracking
                 </p>
@@ -645,7 +646,19 @@ export default function StaffApp() {
                 </thead>
                 <tbody>
                   {dashboardData.urgentRows.map((request) => (
-                    <tr key={request.request_no}>
+                    <tr
+                      className="clickable-row"
+                      key={request.request_no}
+                      onClick={() => navigate(`/staff/requests?request=${request.request_no}`)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          navigate(`/staff/requests?request=${request.request_no}`);
+                        }
+                      }}
+                      role="link"
+                      tabIndex={0}
+                    >
                       <td>{request.request_no}</td>
                       <td>{request.full_name}</td>
                       <td>{request.province}</td>
