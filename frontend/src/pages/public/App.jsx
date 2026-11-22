@@ -455,16 +455,6 @@ export default function App() {
                 required
                 value={form.full_name}
               />
-              <TextField
-                label="เบอร์โทรศัพท์"
-                name="phone"
-                onChange={updateField}
-                inputMode="tel"
-                minLength={9}
-                placeholder="เช่น 0812345678"
-                required
-                value={form.phone}
-              />
               <SelectField
                 label="ช่วงอายุ"
                 name="age_range"
@@ -517,6 +507,16 @@ export default function App() {
                 onChange={updateField}
                 required
                 value={form.recipient_name}
+              />
+              <TextField
+                label="เบอร์โทรศัพท์"
+                name="phone"
+                onChange={updateField}
+                inputMode="tel"
+                minLength={9}
+                placeholder="เช่น 0812345678"
+                required
+                value={form.phone}
               />
               <TextField
                 label="บ้านเลขที่/อาคาร/หมู่บ้าน"
