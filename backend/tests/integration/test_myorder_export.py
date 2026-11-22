@@ -46,7 +46,7 @@ def test_staff_can_export_myorder_excel(
     assert worksheet.max_row == 2
     assert worksheet["A2"].value == "สมชาย ใจดี"
     assert worksheet["B2"].value == "0812345678"
-    assert worksheet["C2"].value == "99/9 หมู่บ้านสุขใจ A ถนนสุขุมวิท"
+    assert worksheet["C2"].value == "99/9 หมู่บ้านสุขใจ A ถนนตัวอย่าง"
     assert worksheet["I2"].value == blank_tracking_request_no
     assert worksheet["J2"].value == "MAHO Beta-1,3/1,6-Glucan แบบเจล ฟรี 2 ซอง"
     assert worksheet["R2"].value == 0
