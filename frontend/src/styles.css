@@ -240,6 +240,10 @@
     @apply border border-[#d9ad5c]/50 bg-white text-[#111947] hover:bg-[#fff4df];
   }
 
+  .btn-success {
+    @apply bg-[#4f7f33] text-white hover:bg-[#3d6627];
+  }
+
   .alert {
     @apply rounded-md px-3 py-2 text-sm font-medium;
   }
