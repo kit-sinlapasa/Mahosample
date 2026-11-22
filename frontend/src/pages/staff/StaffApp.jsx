@@ -58,6 +58,7 @@ const tableColumns = [
     labels: shippingStatusLabels,
   },
   { key: "tracking_number", label: "Tracking", filter: "text" },
+  { key: "created_at", label: "วันที่ลงทะเบียน" },
   { key: "actions", label: "บันทึก" },
 ];
 const dashboardColors = ["#25347c", "#d68019", "#4f7f33", "#8a5f2d", "#64748b", "#9f1239"];
@@ -121,6 +122,15 @@ function parseDate(value) {
   if (!value) return null;
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function formatRegistrationDate(value) {
+  const date = parseDate(value);
+  if (!date) return "-";
+  const pad = (number) => String(number).padStart(2, "0");
+  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(
+    date.getHours(),
+  )}:${pad(date.getMinutes())}`;
 }
 
 function isWithinDateRange(value, from, to) {
@@ -664,6 +674,7 @@ export default function StaffApp() {
                     <th>คำขอ</th>
                     <th>ขนส่ง</th>
                     <th>Tracking</th>
+                    <th>วันที่ลงทะเบียน</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -687,11 +698,12 @@ export default function StaffApp() {
                       <td>{requestStatusLabels[request.request_status] || request.request_status}</td>
                       <td>{shippingStatusLabels[request.shipping_status] || request.shipping_status}</td>
                       <td>{request.tracking_number || "-"}</td>
+                      <td>{formatRegistrationDate(request.created_at)}</td>
                     </tr>
                   ))}
                   {dashboardData.urgentRows.length === 0 && (
                     <tr>
-                      <td className="empty-table-cell" colSpan={6}>
+                      <td className="empty-table-cell" colSpan={7}>
                         ไม่มีรายการเร่งด่วนในช่วงเวลานี้
                       </td>
                     </tr>
@@ -899,6 +911,7 @@ function StaffRow({ request, onSave }) {
           value={trackingNumber}
         />
       </td>
+      <td>{formatRegistrationDate(request.created_at)}</td>
       <td>
         <div className="flex min-w-56 gap-2">
           <input onChange={(event) => setNotes(event.target.value)} placeholder="note" value={notes} />
