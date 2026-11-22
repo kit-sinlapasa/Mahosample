@@ -294,8 +294,16 @@ export default function StaffApp() {
       } while (allItems.length < total);
       setSummary(summaryResponse.data);
       setRequests(allItems);
-    } catch {
-      setMessage("โหลดข้อมูลไม่สำเร็จ กรุณา login ใหม่");
+    } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem("mahosample_token");
+        setToken("");
+        setRequests([]);
+        setSummary(null);
+        setLoginError("เซสชันหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง");
+      } else {
+        setMessage("โหลดข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+      }
     } finally {
       setLoading(false);
     }
