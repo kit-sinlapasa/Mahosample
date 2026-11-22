@@ -732,6 +732,10 @@ export default function StaffApp() {
             Export เป็นไฟล์ ImportRecipientBook_yyyy-mm-dd.csv สำหรับนำไปใช้กับ template ขนส่ง
             โดยดึงเฉพาะรายการที่ยังไม่มีเลข Tracking
           </p>
+          <p className="export-note">
+            หมายเหตุ: Export Excel MyOrder ไม่อิง Filter ในตาราง และจะส่งออกทุกรายการในระบบที่
+            Tracking ว่าง
+          </p>
 
           <form className="mt-4 flex flex-col gap-3 sm:flex-row" onSubmit={importTracking}>
             <input
