@@ -526,7 +526,7 @@ export default function App() {
                 value={form.address_line1}
               />
               <TextField
-                label="ถนน/รายละเอียดเพิ่ม"
+                label="ถนน"
                 name="address_line2"
                 onChange={updateField}
                 value={form.address_line2}
