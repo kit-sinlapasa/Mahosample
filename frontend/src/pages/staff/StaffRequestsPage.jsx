@@ -225,10 +225,17 @@ export default function StaffRequestsPage() {
   const [trackingNumber, setTrackingNumber] = useState("");
   const [notes, setNotes] = useState("");
   const authHeaders = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
+  const actionOnly = searchParams.get("view") === "action";
 
   const filteredRequests = useMemo(() => {
-    const filtered = requests.filter((request) =>
-      tableColumns.every((column) => {
+    const filtered = requests.filter((request) => {
+      const needsAction =
+        request.request_status === "pending" ||
+        request.shipping_status === "ready_to_ship" ||
+        !hasTrackingNumber(request);
+      if (actionOnly && !needsAction) return false;
+
+      return tableColumns.every((column) => {
         if (column.type === "dateRange") {
           return isInDateRange(
             request[column.key],
@@ -241,8 +248,8 @@ export default function StaffRequestsPage() {
         const requestValue = request[column.key];
         if (column.type === "select") return String(requestValue) === filterValue;
         return normalize(displayValue(requestValue)).includes(normalize(filterValue));
-      }),
-    );
+      });
+    });
     return [...filtered].sort((left, right) => {
       const direction = sortConfig.direction === "asc" ? 1 : -1;
       return (
@@ -253,7 +260,7 @@ export default function StaffRequestsPage() {
         ) * direction
       );
     });
-  }, [filters, requests, sortConfig]);
+  }, [actionOnly, filters, requests, sortConfig]);
   const displayedRequests = useMemo(
     () => filteredRequests.slice(0, displayLimit),
     [filteredRequests],
@@ -309,12 +316,18 @@ export default function StaffRequestsPage() {
     setTrackingNumber(request.tracking_number || "");
     setNotes(request.notes || "");
     setMessage("");
-    if (updateUrl) setSearchParams({ request: request.request_no });
+    if (updateUrl) {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.set("request", request.request_no);
+      setSearchParams(nextParams);
+    }
   }
 
   function closeDetail() {
     setSelectedRequest(null);
-    setSearchParams({});
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("request");
+    setSearchParams(nextParams);
   }
 
   function toggleSort(key) {
@@ -326,6 +339,11 @@ export default function StaffRequestsPage() {
 
   function updateFilter(key, value) {
     setFilters((current) => ({ ...current, [key]: value }));
+  }
+
+  function clearAllFilters() {
+    setFilters({});
+    setSearchParams({});
   }
 
   async function login(event) {
@@ -424,14 +442,14 @@ export default function StaffRequestsPage() {
         <section className="surface">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2>รายการทั้งหมด</h2>
+              <h2>{actionOnly ? "งานที่ต้องดำเนินการทั้งหมด" : "รายการทั้งหมด"}</h2>
               <p className="mt-1 text-sm text-zinc-600">
                 แสดง {displayedRequests.length} จาก {filteredRequests.length} รายการที่ตรงกับ filter
                 ทั้งหมด {requests.length} รายการ
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <button className="btn btn-secondary" onClick={() => setFilters({})} type="button">
+              <button className="btn btn-secondary" onClick={clearAllFilters} type="button">
                 ล้าง filter
               </button>
               <button className="btn btn-primary" onClick={exportVisibleCsv} type="button">
@@ -439,6 +457,12 @@ export default function StaffRequestsPage() {
               </button>
             </div>
           </div>
+
+          {actionOnly && (
+            <p className="export-note">
+              กำลังแสดงเฉพาะรายการที่รอตรวจสอบ พร้อมส่ง หรือยังไม่มีเลข Tracking
+            </p>
+          )}
 
           {message && <p className="alert success mt-4">{message}</p>}
 

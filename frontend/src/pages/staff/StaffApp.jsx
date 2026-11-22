@@ -650,8 +650,8 @@ export default function StaffApp() {
                   แสดงรายการที่รอตรวจสอบ พร้อมส่ง หรือยังไม่มีเลข tracking
                 </p>
               </div>
-              <Link className="btn btn-secondary" to="/staff/requests">
-                เปิดตารางข้อมูลเต็ม
+              <Link className="btn btn-secondary" to="/staff/requests?view=action">
+                ดูงานที่ต้องดำเนินการทั้งหมด
               </Link>
             </div>
             <div className="mt-4 overflow-x-auto">
@@ -712,7 +712,7 @@ export default function StaffApp() {
             </div>
             <div className="flex flex-wrap gap-2">
               <Link className="btn btn-secondary" to="/staff/requests">
-                ตารางข้อมูลเต็ม
+                ตารางข้อมูลทั้งหมด
               </Link>
               <button className="btn btn-secondary" onClick={clearFilters} type="button">
                 ล้าง filter
