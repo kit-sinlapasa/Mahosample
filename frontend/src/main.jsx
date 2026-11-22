@@ -18,6 +18,10 @@ const router = createBrowserRouter([
     element: <StaffApp />,
   },
   {
+    path: "/staff/quick",
+    element: <StaffApp />,
+  },
+  {
     path: "/staff/requests",
     element: <StaffRequestsPage />,
   },

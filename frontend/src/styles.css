@@ -302,6 +302,18 @@
     @apply font-normal;
   }
 
+  .staff-nav {
+    @apply flex flex-wrap gap-2;
+  }
+
+  .staff-nav-link {
+    @apply rounded-md border border-[#d9ad5c]/50 bg-white px-3 py-2 text-sm text-[#111947] transition hover:bg-[#fff4df];
+  }
+
+  .staff-nav-link-active {
+    @apply border-[#25347c] bg-[#25347c] text-white hover:bg-[#111947];
+  }
+
   .login-panel {
     @apply w-full max-w-sm space-y-4 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm;
   }
