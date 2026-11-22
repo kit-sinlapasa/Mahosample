@@ -203,6 +203,41 @@ POST_OFFICE_EXPORT_FIELDS = [
     RECIPIENT_ADDRESS_FIELD,
 ]
 
+MYORDER_EXPORT_FIELDS = [
+    "ชื่อผู้รับ",
+    "เบอร์โทร",
+    "ที่อยู่",
+    "ตำบล",
+    "อำเภอ",
+    "จังหวัด",
+    "รหัสไปรษณีย์",
+    "อีเมล",
+    "หมายเหตุ",
+    "ชื่อสินค้า",
+    "ชื่อสินค้า (สำหรับขนส่ง)",
+    "สีสินค้า",
+    "ความกว้างของสินค้า",
+    "ความยาวของสินค้า",
+    "ความสูงของสินค้า",
+    "น้ำหนัก(กก.)",
+    "ประเภทการชำระ",
+    "จำนวนเงิน",
+    "วันที่โอนเงิน",
+    "เวลาที่โอน",
+    "ผู้รับเงิน",
+    "ช่องทางการจำหน่าย",
+]
+
+REFERRAL_SOURCE_EXPORT_LABELS = {
+    "facebook": "Facebook",
+    "website": "Website",
+    "google_search": "Google Search",
+    "ig": "IG",
+    "tiktok": "TikTok",
+    "friend": "เพื่อนแนะนำ",
+    "booth_event": "กิจกรรมออกบูธ",
+}
+
 
 def build_full_shipping_address(sample_request: SampleRequest) -> str:
     parts = [
@@ -228,6 +263,48 @@ def build_post_office_export_rows(
                 RECIPIENT_CODE_FIELD: sample_request.request_no,
                 RECIPIENT_REGION_FIELD: sample_request.postal_code,
                 RECIPIENT_ADDRESS_FIELD: build_full_shipping_address(sample_request),
+            },
+        )
+    return rows
+
+
+def build_myorder_export_rows(
+    sample_requests: Iterable[SampleRequest],
+) -> list[dict[str, object]]:
+    rows = []
+    for sample_request in sample_requests:
+        address = " ".join(
+            part.strip()
+            for part in [sample_request.address_line1, sample_request.address_line2]
+            if part and part.strip()
+        )
+        rows.append(
+            {
+                "ชื่อผู้รับ": sample_request.recipient_name,
+                "เบอร์โทร": sample_request.phone,
+                "ที่อยู่": address,
+                "ตำบล": sample_request.subdistrict,
+                "อำเภอ": sample_request.district,
+                "จังหวัด": sample_request.province,
+                "รหัสไปรษณีย์": sample_request.postal_code,
+                "อีเมล": sample_request.email or "",
+                "หมายเหตุ": sample_request.request_no,
+                "ชื่อสินค้า": "MAHO Beta-1,3/1,6-Glucan แบบเจล ฟรี 2 ซอง",
+                "ชื่อสินค้า (สำหรับขนส่ง)": "มะโฮแบบเจล 2 ซอง",
+                "สีสินค้า": "ชมพู",
+                "ความกว้างของสินค้า": 1,
+                "ความยาวของสินค้า": 1,
+                "ความสูงของสินค้า": 1,
+                "น้ำหนัก(กก.)": 0.1,
+                "ประเภทการชำระ": "BANK",
+                "จำนวนเงิน": 0,
+                "วันที่โอนเงิน": "",
+                "เวลาที่โอน": "",
+                "ผู้รับเงิน": "",
+                "ช่องทางการจำหน่าย": REFERRAL_SOURCE_EXPORT_LABELS.get(
+                    sample_request.referral_source,
+                    sample_request.referral_source or "Website",
+                ),
             },
         )
     return rows

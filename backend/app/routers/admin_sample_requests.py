@@ -1,9 +1,12 @@
 import csv
 from datetime import date
-from io import StringIO
+from io import BytesIO, StringIO
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile, status
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Font
+from openpyxl.utils import get_column_letter
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -90,6 +93,67 @@ def export_post_office_csv(
     )
 
 
+@router.get("/export/myorder")
+def export_myorder_excel(
+    db: Annotated[Session, Depends(get_db)],
+    _: Annotated[User, Depends(require_staff_user)],
+) -> Response:
+    sample_requests = sample_request_service.list_requests_without_tracking(db)
+    rows = sample_request_service.build_myorder_export_rows(sample_requests)
+
+    workbook = Workbook()
+    worksheet = workbook.active
+    worksheet.title = "Template ใหม่_New102024"
+    worksheet.append(sample_request_service.MYORDER_EXPORT_FIELDS)
+    for row in rows:
+        worksheet.append([row[field] for field in sample_request_service.MYORDER_EXPORT_FIELDS])
+
+    red_headers = {1, 2, 3, 10, 11, 12, 13, 14, 15, 17, 18, 22}
+    widths = [
+        14.33,
+        13,
+        48.66,
+        14.33,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        19.83,
+        13,
+        13,
+        13,
+        13,
+        14.33,
+        13,
+        13,
+        13,
+        13,
+        13,
+        23.16,
+    ]
+    for index, width in enumerate(widths, start=1):
+        worksheet.column_dimensions[get_column_letter(index)].width = width
+        cell = worksheet.cell(row=1, column=index)
+        cell.font = Font(bold=True, color="FF0000" if index in red_headers else "000000")
+        cell.alignment = Alignment(horizontal="center", wrap_text=True)
+
+    for row_index in range(2, worksheet.max_row + 1):
+        worksheet.cell(row=row_index, column=2).number_format = "@"
+        worksheet.cell(row=row_index, column=7).number_format = "@"
+
+    output = BytesIO()
+    workbook.save(output)
+    return Response(
+        content=output.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="Myorder_template_{date.today().isoformat()}.xlsx"'
+            ),
+        },
+    )
 @router.post("/import/tracking", response_model=ImportJobRead)
 async def import_tracking(
     db: Annotated[Session, Depends(get_db)],
