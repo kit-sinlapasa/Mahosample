@@ -7,9 +7,6 @@ import { apiClient } from "../../api/client";
 const initialForm = {
   full_name: "",
   phone: "",
-  email: "",
-  line_id: "",
-  messenger_id: "",
   age_range: "30-39",
   health_interest: "immune_support",
   health_interest_other: "",
@@ -22,9 +19,8 @@ const initialForm = {
   district: "",
   province: "",
   postal_code: "",
-  preferred_contact_channel: "line",
+  preferred_contact_channel: "phone",
   pdpa_consent: false,
-  marketing_consent: false,
 };
 
 const ageRanges = [
@@ -134,12 +130,6 @@ function digitsOnly(value) {
   return value.replace(/\D/g, "");
 }
 
-function hasContactChannel(form) {
-  return Boolean(
-    form.email.trim() || form.line_id.trim() || form.messenger_id.trim(),
-  );
-}
-
 function normalizeAddressValue(value) {
   return value.trim().toLowerCase();
 }
@@ -242,9 +232,6 @@ function getClientValidationErrors(form) {
   if (digitsOnly(form.phone).length < 9) {
     errors.push("กรุณากรอกเบอร์โทรศัพท์ให้ครบอย่างน้อย 9 หลัก");
   }
-  if (!hasContactChannel(form)) {
-    errors.push("กรุณากรอกช่องทางติดต่ออย่างน้อย 1 อย่าง: อีเมล, LINE ID หรือ Facebook Messenger");
-  }
   if (!form.recipient_name.trim()) {
     errors.push("กรุณากรอกชื่อผู้รับ");
   }
@@ -306,18 +293,8 @@ function getApiErrorMessage(error) {
     if (fieldNames.includes("postal_code")) {
       return "กรุณาตรวจสอบรหัสไปรษณีย์ ต้องมีอย่างน้อย 5 หลัก";
     }
-    if (fieldNames.includes("email")) {
-      return "กรุณาตรวจสอบอีเมลให้ถูกต้อง หรือเว้นว่างไว้";
-    }
     if (fieldNames.includes("health_interest_other")) {
       return "กรุณาระบุข้อมูลเพิ่มเติม เมื่อเลือกความสนใจเป็น “อื่น ๆ”";
-    }
-    if (
-      fieldNames.includes("email")
-      || fieldNames.includes("line_id")
-      || fieldNames.includes("messenger_id")
-    ) {
-      return "กรุณากรอกช่องทางติดต่ออย่างน้อย 1 อย่าง: อีเมล, LINE ID หรือ Facebook Messenger";
     }
   }
 
@@ -417,10 +394,7 @@ export default function App() {
       const payload = {
         ...form,
         address_line2: form.address_line2 || null,
-        email: form.email || null,
         health_interest_other: form.health_interest_other || null,
-        line_id: form.line_id || null,
-        messenger_id: form.messenger_id || null,
       };
       const response = await apiClient.post("/api/public/sample-requests", payload);
       setCreatedRequest(response.data);
@@ -451,7 +425,7 @@ export default function App() {
           </h2>
           <p className="mt-4 max-w-2xl text-base font-normal leading-7 text-zinc-700">
             กรอกข้อมูลเพื่อให้เจ้าหน้าที่ตรวจสอบสิทธิ์และจัดส่งตัวอย่าง
-            พร้อมแจ้งเลข tracking หลังจัดส่งผ่าน LINE ID หรือ Facebook Messenger
+            เจ้าหน้าที่สามารถติดต่อกลับผ่านเบอร์โทรศัพท์ที่ลงทะเบียนไว้
           </p>
           <div className="mt-5 flex flex-wrap gap-2 text-sm font-normal">
             <span className="brand-chip">ก่อตั้งจากญี่ปุ่น</span>
@@ -490,28 +464,6 @@ export default function App() {
                 placeholder="เช่น 0812345678"
                 required
                 value={form.phone}
-              />
-              <TextField
-                label="อีเมล"
-                name="email"
-                onChange={updateField}
-                placeholder="กรอกอีเมล หรือเลือกกรอก LINE/Facebook แทน"
-                type="email"
-                value={form.email}
-              />
-              <TextField
-                label="LINE ID"
-                name="line_id"
-                onChange={updateField}
-                placeholder="กรอก LINE ID หรือเลือกกรอกอีเมล/Facebook แทน"
-                value={form.line_id}
-              />
-              <TextField
-                label="Facebook Messenger"
-                name="messenger_id"
-                onChange={updateField}
-                placeholder="กรอกชื่อบัญชี หรือเลือกกรอกอีเมล/LINE แทน"
-                value={form.messenger_id}
               />
               <SelectField
                 label="ช่วงอายุ"
@@ -629,15 +581,6 @@ export default function App() {
               />
               <span>ยินยอมให้ใช้ข้อมูลเพื่อตรวจสอบสิทธิ์ ติดต่อกลับ และจัดส่งตัวอย่าง</span>
             </label>
-            <label className="check-row">
-              <input
-                checked={form.marketing_consent}
-                name="marketing_consent"
-                onChange={updateField}
-                type="checkbox"
-              />
-              <span>ยินยอมรับข่าวสาร โปรโมชั่น และข้อมูลผลิตภัณฑ์ในอนาคต</span>
-            </label>
           </section>
 
           {formError && (
@@ -668,8 +611,7 @@ export default function App() {
           <section className="surface text-sm leading-6 text-zinc-700">
             <h2>ติดตามพัสดุ</h2>
             <p className="mt-3">
-              หลังเจ้าหน้าที่จัดส่ง ระบบจะมีเลข tracking สำหรับส่งให้ลูกค้าทาง LINE ID
-              หรือ Facebook Messenger
+              หลังเจ้าหน้าที่จัดส่ง ลูกค้าสามารถใช้เลข tracking เพื่อตรวจสอบสถานะพัสดุ
             </p>
             <Link className="btn btn-primary mt-4 w-full" to="/tracking">
               เปิดหน้าติดตามพัสดุ
@@ -697,8 +639,7 @@ export default function App() {
               เลขรายการภายในคือ <strong>{createdRequest.request_no}</strong>
             </p>
             <p className="success-dialog-copy">
-              เจ้าหน้าที่จะส่งเลข tracking ให้ทาง LINE ID หรือ Facebook Messenger
-              หลังจัดส่งแล้ว
+              เจ้าหน้าที่จะติดต่อกลับผ่านเบอร์โทรศัพท์ที่ลงทะเบียนไว้หลังจัดส่งแล้ว
             </p>
             <button
               className="btn btn-primary mt-5 w-full"
