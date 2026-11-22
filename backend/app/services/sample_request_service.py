@@ -360,3 +360,23 @@ def update_sample_request_shipping(
     db.refresh(sample_request)
     return sample_request
 
+
+def update_sample_request_combined(
+    db: Session,
+    sample_request: SampleRequest,
+    request_status: str,
+    shipping_status: str,
+    tracking_number: str | None,
+    notes: str | None,
+    updated_by_user_id: int,
+) -> SampleRequest:
+    sample_request.request_status = request_status
+    sample_request.shipping_status = shipping_status
+    sample_request.tracking_number = tracking_number
+    sample_request.notes = notes
+    sample_request.updated_by_user_id = updated_by_user_id
+    db.add(sample_request)
+    db.commit()
+    db.refresh(sample_request)
+    return sample_request
+

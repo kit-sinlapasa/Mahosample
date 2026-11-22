@@ -359,29 +359,25 @@ export default function StaffApp() {
     setDateRange({ from: toInputDate(start), to: toInputDate(end) });
   }
 
-  async function updateShipping(requestNo, shippingStatus, trackingNumber) {
+  async function saveChanges(
+    requestNo,
+    requestStatus,
+    shippingStatus,
+    trackingNumber,
+    notes,
+  ) {
     setMessage("");
     await apiClient.patch(
-      `/api/admin/sample-requests/${requestNo}/shipping`,
+      `/api/admin/sample-requests/${requestNo}/combined`,
       {
-        request_status: shippingStatus === "shipped" ? "shipped" : undefined,
+        notes,
+        request_status: requestStatus,
         shipping_status: shippingStatus,
         tracking_number: trackingNumber || null,
       },
       { headers: authHeaders },
     );
-    setMessage(`อัปเดต ${requestNo} แล้ว`);
-    loadDashboard();
-  }
-
-  async function updateRequest(requestNo, requestStatus, notes) {
-    setMessage("");
-    await apiClient.patch(
-      `/api/admin/sample-requests/${requestNo}`,
-      { notes, request_status: requestStatus },
-      { headers: authHeaders },
-    );
-    setMessage(`บันทึก ${requestNo} แล้ว`);
+    setMessage(`บันทึกรายการ ${requestNo} เรียบร้อยแล้ว`);
     loadDashboard();
   }
 
@@ -811,8 +807,7 @@ export default function StaffApp() {
                 {visibleRequests.map((request) => (
                   <StaffRow
                     key={request.request_no}
-                    onSave={updateRequest}
-                    onShipping={updateShipping}
+                    onSave={saveChanges}
                     request={request}
                   />
                 ))}
@@ -864,7 +859,7 @@ function InsightItem({ detail, label, value }) {
   );
 }
 
-function StaffRow({ request, onSave, onShipping }) {
+function StaffRow({ request, onSave }) {
   const [requestStatus, setRequestStatus] = useState(request.request_status);
   const [shippingStatus, setShippingStatus] = useState(request.shipping_status);
   const [trackingNumber, setTrackingNumber] = useState(request.tracking_number || "");
@@ -904,18 +899,19 @@ function StaffRow({ request, onSave, onShipping }) {
         <div className="flex min-w-56 gap-2">
           <input onChange={(event) => setNotes(event.target.value)} placeholder="note" value={notes} />
           <button
-            className="btn btn-secondary"
-            onClick={() => onSave(request.request_no, requestStatus, notes)}
-            type="button"
-          >
-            บันทึกคำขอ
-          </button>
-          <button
             className="btn btn-primary"
-            onClick={() => onShipping(request.request_no, shippingStatus, trackingNumber)}
+            onClick={() =>
+              onSave(
+                request.request_no,
+                requestStatus,
+                shippingStatus,
+                trackingNumber,
+                notes,
+              )
+            }
             type="button"
           >
-            อัปเดตขนส่ง
+            บันทึกการเปลี่ยนแปลง
           </button>
         </div>
       </td>

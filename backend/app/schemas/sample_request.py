@@ -129,3 +129,10 @@ class SampleRequestShippingUpdate(BaseModel):
     tracking_number: str | None = Field(default=None, max_length=50)
     shipped_at: datetime | None = None
 
+
+class SampleRequestCombinedUpdate(BaseModel):
+    request_status: RequestStatus
+    shipping_status: ShippingStatus
+    tracking_number: str | None = Field(default=None, max_length=50)
+    notes: str | None = Field(default=None, max_length=5000)
+
