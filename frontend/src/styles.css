@@ -216,6 +216,10 @@
     @apply grid gap-4 md:grid-cols-2;
   }
 
+  .form-section {
+    @apply rounded-md border border-[#d9ad5c]/45 p-4 sm:p-5;
+  }
+
   .check-row {
     @apply flex items-start gap-3 rounded-md border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-800;
   }
