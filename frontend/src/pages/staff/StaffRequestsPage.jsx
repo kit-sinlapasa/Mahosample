@@ -277,8 +277,15 @@ export default function StaffRequestsPage() {
         offset += displayLimit;
       } while (allItems.length < total);
       setRequests(allItems);
-    } catch {
-      setMessage("โหลดข้อมูลไม่สำเร็จ กรุณา login ใหม่");
+    } catch (error) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem("mahosample_token");
+        setToken("");
+        setRequests([]);
+        setMessage("เซสชันหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง");
+      } else {
+        setMessage("โหลดข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+      }
     } finally {
       setLoading(false);
     }
