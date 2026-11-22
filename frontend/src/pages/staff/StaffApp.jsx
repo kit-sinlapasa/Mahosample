@@ -391,6 +391,24 @@ export default function StaffApp() {
     setMessage("Export เฉพาะรายการที่ Tracking ว่างแล้ว");
   }
 
+  async function exportMyOrderExcel() {
+    const response = await apiClient.get("/api/admin/sample-requests/export/myorder", {
+      headers: authHeaders,
+      responseType: "blob",
+    });
+    const url = window.URL.createObjectURL(
+      new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      }),
+    );
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = getDownloadFilename(response, "Myorder_template.xlsx");
+    anchor.click();
+    window.URL.revokeObjectURL(url);
+    setMessage("Export Excel MyOrder เฉพาะรายการที่ Tracking ว่างแล้ว");
+  }
+
   async function importTracking(event) {
     event.preventDefault();
     if (!importFile) return;
@@ -700,6 +718,9 @@ export default function StaffApp() {
               </button>
               <button className="btn btn-primary" onClick={exportCsv} type="button">
                 Export Tracking ว่าง
+              </button>
+              <button className="btn btn-primary" onClick={exportMyOrderExcel} type="button">
+                Export Excel MyOrder
               </button>
             </div>
           </div>
