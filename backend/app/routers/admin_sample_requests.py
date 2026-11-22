@@ -18,6 +18,7 @@ from app.schemas.sample_request import (
     SampleRequestAdminRead,
     SampleRequestCombinedUpdate,
     SampleRequestCreate,
+    SampleRequestExportSelection,
     SampleRequestListResponse,
     SampleRequestShippingUpdate,
     SampleRequestUpdate,
@@ -94,12 +95,7 @@ def export_post_office_csv(
     )
 
 
-@router.get("/export/myorder")
-def export_myorder_excel(
-    db: Annotated[Session, Depends(get_db)],
-    _: Annotated[User, Depends(require_staff_user)],
-) -> Response:
-    sample_requests = sample_request_service.list_requests_without_tracking(db)
+def build_myorder_excel_response(sample_requests: list[SampleRequest]) -> Response:
     rows = sample_request_service.build_myorder_export_rows(sample_requests)
 
     workbook = Workbook()
@@ -155,6 +151,30 @@ def export_myorder_excel(
             ),
         },
     )
+
+
+@router.get("/export/myorder")
+def export_myorder_excel(
+    db: Annotated[Session, Depends(get_db)],
+    _: Annotated[User, Depends(require_staff_user)],
+) -> Response:
+    sample_requests = sample_request_service.list_requests_without_tracking(db)
+    return build_myorder_excel_response(sample_requests)
+
+
+@router.post("/export/myorder")
+def export_filtered_myorder_excel(
+    selection: SampleRequestExportSelection,
+    db: Annotated[Session, Depends(get_db)],
+    _: Annotated[User, Depends(require_staff_user)],
+) -> Response:
+    sample_requests = sample_request_service.list_requests_without_tracking_by_numbers(
+        db,
+        selection.request_numbers,
+    )
+    return build_myorder_excel_response(sample_requests)
+
+
 @router.post("/import/tracking", response_model=ImportJobRead)
 async def import_tracking(
     db: Annotated[Session, Depends(get_db)],
