@@ -74,3 +74,25 @@ def test_staff_can_edit_sample_request_status(client: TestClient, staff_user) ->
     assert response.json()["request_status"] == "approved"
     assert response.json()["notes"] == "Eligible for sample shipment"
 
+
+def test_staff_can_save_request_and_shipping_together(client: TestClient, staff_user) -> None:
+    created = create_public_request(client)
+    token = login(client, staff_user.email, "staff-password")
+
+    response = client.patch(
+        f"/api/admin/sample-requests/{created['request_no']}/combined",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "request_status": "approved",
+            "shipping_status": "ready_to_ship",
+            "tracking_number": "JC012366699TH",
+            "notes": "ตรวจสอบและเตรียมจัดส่งแล้ว",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["request_status"] == "approved"
+    assert response.json()["shipping_status"] == "ready_to_ship"
+    assert response.json()["tracking_number"] == "JC012366699TH"
+    assert response.json()["notes"] == "ตรวจสอบและเตรียมจัดส่งแล้ว"
+

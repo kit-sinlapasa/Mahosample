@@ -16,6 +16,7 @@ from app.models.user import User
 from app.schemas.import_job import ImportJobRead
 from app.schemas.sample_request import (
     SampleRequestAdminRead,
+    SampleRequestCombinedUpdate,
     SampleRequestCreate,
     SampleRequestListResponse,
     SampleRequestShippingUpdate,
@@ -240,5 +241,30 @@ def update_sample_request_shipping(
         sample_request,
         shipping_in,
         current_user.id,
+    )
+    return to_admin_read(updated)
+
+
+@router.patch("/{request_no}/combined", response_model=SampleRequestAdminRead)
+def update_sample_request_combined(
+    request_no: str,
+    update_in: SampleRequestCombinedUpdate,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_staff_user)],
+) -> SampleRequestAdminRead:
+    sample_request = sample_request_service.get_sample_request_by_request_no(db, request_no)
+    if sample_request is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Sample request not found.",
+        )
+    updated = sample_request_service.update_sample_request_combined(
+        db,
+        sample_request,
+        request_status=update_in.request_status.value,
+        shipping_status=update_in.shipping_status.value,
+        tracking_number=update_in.tracking_number,
+        notes=update_in.notes,
+        updated_by_user_id=current_user.id,
     )
     return to_admin_read(updated)

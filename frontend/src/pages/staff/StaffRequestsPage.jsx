@@ -340,31 +340,20 @@ export default function StaffRequestsPage() {
     }
   }
 
-  async function saveRequest() {
+  async function saveChanges() {
     if (!selectedRequest) return;
     const response = await apiClient.patch(
-      `/api/admin/sample-requests/${selectedRequest.request_no}`,
-      { notes, request_status: requestStatus },
-      { headers: authHeaders },
-    );
-    setSelectedRequest(response.data);
-    setMessage(`บันทึกคำขอ ${selectedRequest.request_no} แล้ว`);
-    loadRequests();
-  }
-
-  async function updateShipping() {
-    if (!selectedRequest) return;
-    const response = await apiClient.patch(
-      `/api/admin/sample-requests/${selectedRequest.request_no}/shipping`,
+      `/api/admin/sample-requests/${selectedRequest.request_no}/combined`,
       {
-        request_status: shippingStatus === "shipped" ? "shipped" : undefined,
+        request_status: requestStatus,
         shipping_status: shippingStatus,
         tracking_number: trackingNumber || null,
+        notes,
       },
       { headers: authHeaders },
     );
     setSelectedRequest(response.data);
-    setMessage(`อัปเดตขนส่ง ${selectedRequest.request_no} แล้ว`);
+    setMessage(`บันทึกรายการ ${selectedRequest.request_no} เรียบร้อยแล้ว`);
     loadRequests();
   }
 
@@ -595,11 +584,8 @@ export default function StaffRequestsPage() {
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              <button className="btn btn-secondary" onClick={saveRequest} type="button">
-                บันทึกคำขอ
-              </button>
-              <button className="btn btn-primary" onClick={updateShipping} type="button">
-                อัปเดตขนส่ง
+              <button className="btn btn-primary" onClick={saveChanges} type="button">
+                บันทึกการเปลี่ยนแปลง
               </button>
             </div>
 
