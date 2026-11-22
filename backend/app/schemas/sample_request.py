@@ -54,8 +54,6 @@ class SampleRequestCreate(BaseModel):
     def validate_business_rules(self) -> "SampleRequestCreate":
         if not self.pdpa_consent:
             raise ValueError("PDPA consent is required.")
-        if not (self.email or self.line_id or self.messenger_id):
-            raise ValueError("At least one contact channel is required.")
         if self.health_interest == HealthInterest.OTHER and not self.health_interest_other:
             raise ValueError("health_interest_other is required when health_interest is other.")
         return self

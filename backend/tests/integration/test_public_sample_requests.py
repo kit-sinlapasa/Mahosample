@@ -5,9 +5,6 @@ def valid_sample_request_payload() -> dict[str, object]:
     return {
         "full_name": "สมชาย ใจดี",
         "phone": "0812345678",
-        "email": "somchai@example.com",
-        "line_id": "somchai-line",
-        "messenger_id": None,
         "age_range": "40-49",
         "health_interest": "immune_support",
         "health_interest_other": None,
@@ -20,9 +17,8 @@ def valid_sample_request_payload() -> dict[str, object]:
         "district": "ลาดพร้าว",
         "province": "กรุงเทพมหานคร",
         "postal_code": "10230",
-        "preferred_contact_channel": "line",
+        "preferred_contact_channel": "phone",
         "pdpa_consent": True,
-        "marketing_consent": False,
     }
 
 
@@ -55,42 +51,15 @@ def test_public_sample_request_stores_referral_source(client: TestClient, staff_
     assert admin_response.json()["referral_source"] == "google_search"
 
 
-def test_public_user_can_create_sample_request_with_line_only(client: TestClient) -> None:
-    payload = valid_sample_request_payload()
-    payload["phone"] = "0812345680"
-    payload["email"] = None
-    payload["line_id"] = "somchai-line-only"
-    payload["messenger_id"] = None
-
-    response = client.post("/api/public/sample-requests", json=payload)
-
-    assert response.status_code == 201
-
-
-def test_public_user_can_create_sample_request_with_messenger_only(client: TestClient) -> None:
-    payload = valid_sample_request_payload()
-    payload["phone"] = "0812345681"
-    payload["email"] = None
-    payload["line_id"] = None
-    payload["messenger_id"] = "somchai-messenger-only"
-
-    response = client.post("/api/public/sample-requests", json=payload)
-
-    assert response.status_code == 201
-
-
-def test_public_sample_request_requires_at_least_one_contact_channel(
+def test_public_user_can_create_sample_request_without_digital_contact_fields(
     client: TestClient,
 ) -> None:
     payload = valid_sample_request_payload()
-    payload["phone"] = "0812345682"
-    payload["email"] = None
-    payload["line_id"] = None
-    payload["messenger_id"] = None
+    payload["phone"] = "0812345680"
 
     response = client.post("/api/public/sample-requests", json=payload)
 
-    assert response.status_code == 422
+    assert response.status_code == 201
 
 
 def test_public_sample_request_requires_pdpa_consent(client: TestClient) -> None:
@@ -109,7 +78,6 @@ def test_public_sample_request_rejects_duplicate_phone(client: TestClient) -> No
     assert first_response.status_code == 201
 
     duplicate_payload = valid_sample_request_payload()
-    duplicate_payload["email"] = "another@example.com"
     duplicate_payload["address_line1"] = "88/8 อาคารทดสอบ"
     duplicate_payload["address_line2"] = "ซอยตัวอย่าง 2"
 
@@ -126,7 +94,6 @@ def test_public_sample_request_reports_duplicate_address(client: TestClient) -> 
 
     duplicate_payload = valid_sample_request_payload()
     duplicate_payload["phone"] = "0812345699"
-    duplicate_payload["email"] = "different@example.com"
 
     response = client.post("/api/public/sample-requests", json=duplicate_payload)
 
@@ -142,7 +109,6 @@ def test_public_sample_request_reports_duplicate_phone_and_address(
     assert first_response.status_code == 201
 
     duplicate_payload = valid_sample_request_payload()
-    duplicate_payload["email"] = "another@example.com"
 
     response = client.post("/api/public/sample-requests", json=duplicate_payload)
 
