@@ -51,3 +51,24 @@ def test_staff_can_export_myorder_excel(
     assert worksheet["J2"].value == "MAHO Beta-1,3/1,6-Glucan แบบเจล ฟรี 2 ซอง"
     assert worksheet["R2"].value == 0
     assert worksheet["V2"].value == "Facebook"
+
+
+def test_staff_can_export_myorder_excel_from_filtered_selection(
+    client: TestClient,
+    staff_user,
+) -> None:
+    selected_request_no = create_sample_request_with_phone(client, "0812345680", "C")
+    create_sample_request_with_phone(client, "0812345681", "D")
+    token = login(client, staff_user.email, "staff-password")
+
+    response = client.post(
+        "/api/admin/sample-requests/export/myorder",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"request_numbers": [selected_request_no]},
+    )
+
+    assert response.status_code == 200
+    workbook = load_workbook(BytesIO(response.content), data_only=True)
+    worksheet = workbook["Template ใหม่_New102024"]
+    assert worksheet.max_row == 2
+    assert worksheet["I2"].value == selected_request_no

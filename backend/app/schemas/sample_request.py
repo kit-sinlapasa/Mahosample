@@ -136,3 +136,7 @@ class SampleRequestCombinedUpdate(BaseModel):
     tracking_number: str | None = Field(default=None, max_length=50)
     notes: str | None = Field(default=None, max_length=5000)
 
+
+class SampleRequestExportSelection(BaseModel):
+    request_numbers: list[str] = Field(max_length=10000)
+

@@ -186,6 +186,25 @@ def list_requests_without_tracking(db: Session) -> list[SampleRequest]:
     )
 
 
+def list_requests_without_tracking_by_numbers(
+    db: Session,
+    request_numbers: list[str],
+) -> list[SampleRequest]:
+    if not request_numbers:
+        return []
+    return list(
+        db.scalars(
+            select(SampleRequest)
+            .where(
+                SampleRequest.request_no.in_(request_numbers),
+                (SampleRequest.tracking_number.is_(None))
+                | (SampleRequest.tracking_number == ""),
+            )
+            .order_by(SampleRequest.created_at.asc(), SampleRequest.id.asc()),
+        ),
+    )
+
+
 RECIPIENT_PHONE_FIELD = "*Recipient Phone\n(เบอร์โทรศัพท์ผู้รับ)"
 RECIPIENT_NAME_FIELD = "*Recipient Name\n(ชื่อผู้รับ)"
 RECIPIENT_CODE_FIELD = "RecipientCode\n(รหัสผู้รับ)"

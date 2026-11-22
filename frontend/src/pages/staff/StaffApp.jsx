@@ -292,6 +292,10 @@ export default function StaffApp() {
       return leftValue.localeCompare(rightValue, "th", { numeric: true }) * direction;
     });
   }, [filters, requests, sortConfig]);
+  const myOrderExportRequests = useMemo(
+    () => visibleRequests.filter((request) => !hasTrackingNumber(request)),
+    [visibleRequests],
+  );
 
   async function loadDashboard() {
     if (!token) return;
@@ -416,10 +420,11 @@ export default function StaffApp() {
   }
 
   async function exportMyOrderExcel() {
-    const response = await apiClient.get("/api/admin/sample-requests/export/myorder", {
-      headers: authHeaders,
-      responseType: "blob",
-    });
+    const response = await apiClient.post(
+      "/api/admin/sample-requests/export/myorder",
+      { request_numbers: myOrderExportRequests.map((request) => request.request_no) },
+      { headers: authHeaders, responseType: "blob" },
+    );
     const url = window.URL.createObjectURL(
       new Blob([response.data], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -430,7 +435,7 @@ export default function StaffApp() {
     anchor.download = getDownloadFilename(response, "Myorder_template.xlsx");
     anchor.click();
     window.URL.revokeObjectURL(url);
-    setMessage("Export Excel MyOrder เฉพาะรายการที่ Tracking ว่างแล้ว");
+    setMessage(`Export Excel MyOrder ${myOrderExportRequests.length} รายการแล้ว`);
   }
 
   async function importTracking(event) {
@@ -756,8 +761,13 @@ export default function StaffApp() {
               <button className="btn btn-primary" onClick={exportCsv} type="button">
                 Export Tracking ว่าง
               </button>
-              <button className="btn btn-success" onClick={exportMyOrderExcel} type="button">
-                Export Excel MyOrder
+              <button
+                className="btn btn-success"
+                disabled={myOrderExportRequests.length === 0}
+                onClick={exportMyOrderExcel}
+                type="button"
+              >
+                Export Excel MyOrder ({myOrderExportRequests.length})
               </button>
             </div>
           </div>
@@ -769,8 +779,8 @@ export default function StaffApp() {
             Filter ในตารางนี้มีผลเฉพาะรายการที่แสดงในหน้าแก้เร็ว ไม่กระทบ Dashboard
           </p>
           <p className="export-note">
-            หมายเหตุ: Export Excel MyOrder ไม่อิง Filter ในตาราง และจะส่งออกทุกรายการในระบบที่
-            Tracking ว่าง
+            หมายเหตุ: Export Excel MyOrder อิง Filter ในตาราง และส่งออกเฉพาะรายการที่ Tracking
+            ว่าง หากไม่ตั้ง Filter ระบบจะส่งออกทุกรายการที่ Tracking ว่าง
           </p>
 
           <form className="mt-4 flex flex-col gap-3 sm:flex-row" onSubmit={importTracking}>
