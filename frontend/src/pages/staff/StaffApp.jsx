@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Bar,
   BarChart,
@@ -17,6 +17,7 @@ import {
 } from "recharts";
 
 import { apiClient } from "../../api/client";
+import StaffNavigation from "./StaffNavigation";
 
 const statusOptions = [
   "pending",
@@ -58,7 +59,7 @@ const tableColumns = [
     labels: shippingStatusLabels,
   },
   { key: "tracking_number", label: "Tracking", filter: "text" },
-  { key: "created_at", label: "วันที่ลงทะเบียน" },
+  { key: "created_at", label: "วันที่ลงทะเบียน", filter: "dateRange" },
   { key: "actions", label: "บันทึก" },
 ];
 const dashboardColors = ["#25347c", "#d68019", "#4f7f33", "#8a5f2d", "#64748b", "#9f1239"];
@@ -188,6 +189,8 @@ function averageDaysToShip(items) {
 
 export default function StaffApp() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isQuickPage = location.pathname === "/staff/quick";
   const [token, setToken] = useState(() => localStorage.getItem("mahosample_token") || "");
   const [email, setEmail] = useState("admin@mahosample.com");
   const [password, setPassword] = useState("");
@@ -267,6 +270,13 @@ export default function StaffApp() {
     const filteredRequests = requests.filter((request) =>
       tableColumns.every((column) => {
         if (!column.filter) return true;
+        if (column.filter === "dateRange") {
+          return isWithinDateRange(
+            request[column.key],
+            filters[`${column.key}_from`],
+            filters[`${column.key}_to`],
+          );
+        }
         const filterValue = filters[column.key];
         if (!filterValue) return true;
         const rawValue = request[column.key];
@@ -473,18 +483,25 @@ export default function StaffApp() {
   return (
     <main className="staff-page min-h-screen bg-zinc-100 text-zinc-950">
       <header className="border-b border-zinc-200 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="eyebrow">Mahosample Staff</p>
-            <h1 className="text-xl">Dynamic Dashboard</h1>
+            <h1 className="text-xl">
+              {isQuickPage ? "รายการลงทะเบียนสำหรับแก้เร็ว" : "Dynamic Dashboard"}
+            </h1>
           </div>
-          <button className="btn btn-secondary" onClick={logout} type="button">
-            Logout
-          </button>
+          <div className="flex flex-col gap-3 lg:items-end">
+            <StaffNavigation />
+            <button className="btn btn-secondary self-end" onClick={logout} type="button">
+              Logout
+            </button>
+          </div>
         </div>
       </header>
 
       <div className="mx-auto max-w-7xl space-y-6 px-4 py-6">
+        {!isQuickPage && (
+          <>
         <section className="surface">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
@@ -714,6 +731,10 @@ export default function StaffApp() {
           </section>
         </section>
 
+          </>
+        )}
+
+        {isQuickPage && (
         <section className="surface">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -743,6 +764,9 @@ export default function StaffApp() {
           <p className="mt-2 text-sm text-zinc-600">
             Export เป็นไฟล์ ImportRecipientBook_yyyy-mm-dd.csv สำหรับนำไปใช้กับ template ขนส่ง
             โดยดึงเฉพาะรายการที่ยังไม่มีเลข Tracking
+          </p>
+          <p className="mt-2 text-sm text-zinc-600">
+            Filter ในตารางนี้มีผลเฉพาะรายการที่แสดงในหน้าแก้เร็ว ไม่กระทบ Dashboard
           </p>
           <p className="export-note">
             หมายเหตุ: Export Excel MyOrder ไม่อิง Filter ในตาราง และจะส่งออกทุกรายการในระบบที่
@@ -815,6 +839,26 @@ export default function StaffApp() {
                           ))}
                         </select>
                       )}
+                      {column.filter === "dateRange" && (
+                        <div className="date-range-filter">
+                          <input
+                            aria-label={`filter ${column.label} จากวันที่`}
+                            onChange={(event) =>
+                              updateFilter(`${column.key}_from`, event.target.value)
+                            }
+                            type="date"
+                            value={filters[`${column.key}_from`] || ""}
+                          />
+                          <input
+                            aria-label={`filter ${column.label} ถึงวันที่`}
+                            onChange={(event) =>
+                              updateFilter(`${column.key}_to`, event.target.value)
+                            }
+                            type="date"
+                            value={filters[`${column.key}_to`] || ""}
+                          />
+                        </div>
+                      )}
                     </th>
                   ))}
                 </tr>
@@ -838,6 +882,7 @@ export default function StaffApp() {
             </table>
           </div>
         </section>
+        )}
       </div>
     </main>
   );

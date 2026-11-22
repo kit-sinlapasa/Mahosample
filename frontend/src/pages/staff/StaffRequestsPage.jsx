@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 
 import { apiClient } from "../../api/client";
+import StaffNavigation from "./StaffNavigation";
 
 const requestStatusOptions = [
   "pending",
@@ -422,15 +423,13 @@ export default function StaffRequestsPage() {
   return (
     <main className="staff-page min-h-screen bg-zinc-100 text-zinc-950">
       <header className="border-b border-zinc-200 bg-white">
-        <div className="mx-auto flex max-w-[96rem] items-center justify-between px-4 py-4">
+        <div className="mx-auto flex max-w-[96rem] flex-col gap-3 px-4 py-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="eyebrow">Mahosample Staff</p>
             <h1 className="text-xl">ตารางข้อมูลเต็ม</h1>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Link className="btn btn-secondary" to="/staff">
-              Dashboard
-            </Link>
+          <div className="flex flex-col gap-3 lg:items-end">
+            <StaffNavigation />
             <button className="btn btn-secondary" onClick={loadRequests} type="button">
               {loading ? "กำลังโหลด..." : "Refresh"}
             </button>
