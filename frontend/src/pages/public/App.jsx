@@ -445,7 +445,7 @@ export default function App() {
 
       <div className="mx-auto grid max-w-6xl gap-6 px-4 py-6 lg:grid-cols-[1fr_320px]">
         <form className="surface space-y-6" onSubmit={submitForm}>
-          <section>
+          <section className="form-section">
             <h2>ข้อมูลผู้ลงทะเบียน</h2>
             <div className="form-grid mt-4">
               <TextField
@@ -482,7 +482,7 @@ export default function App() {
             </div>
           </section>
 
-          <section>
+          <section className="form-section">
             <h2>ข้อมูลสุขภาพ</h2>
             <div className="form-grid mt-4">
               <SelectField
@@ -508,7 +508,7 @@ export default function App() {
             </div>
           </section>
 
-          <section>
+          <section className="form-section">
             <h2>ที่อยู่จัดส่ง</h2>
             <div className="form-grid mt-4">
               <TextField
